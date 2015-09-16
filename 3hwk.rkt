@@ -336,7 +336,16 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 (define (file-names-satisfying adir fcond)
   (flatten-dir (filter-dir adir fcond)))
 ;; Test Cases
-(check-expect (file-names-satisfying DIRZ))
+(define IS-FIL (lambda (f) (and (equal? (file-name f) 'name) 
+                                 (= 5 (file-size f))
+                                 (equal? (file-content f) 'cont))))
+(define IS-FIL2 (lambda (f) (and (equal? (file-name f) 'name) 
+                                 (= 6 (file-size f))
+                                 (equal? (file-content f) 'conte))))
+(check-expect (file-names-satisfying DIRZ IS-FIL) (list FIL FIL FIL FIL FIL))
+(check-expect (file-names-satisfying DIRZ IS-FIL2) (list FIL2))
+(check-expect (file-names-satisfying DIRZ (lambda (f) false)) empty)
+(check-expect (file-names-satisfying DIRZ (lambda (f) true)) (list FIL FIL FIL FIL FIL2 FIL))
 
                                      
 ;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     

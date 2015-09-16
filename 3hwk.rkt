@@ -130,7 +130,7 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
   (define MIXED-2 (make-dir 'm (list MIXED-21 MIXED-21 DE DE) (list FN-1)))
   
   ;; =============High Level Functions==============
-  ;; apply-dir: (a-dir, (list[files] -> x) -> a-dir)
+  ;; apply-dir: (a-dir, (list[files] -> list[files]) -> a-dir)
   ;; Applies the given lof-fun to every single lof
   ;; throughout the entire file system
   (define (apply-dir a-dir lof-fun)
@@ -141,8 +141,9 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
   ;; in every directory in the list, and within all
   ;; subdirectories/throughout the entire file system.
   (define (apply-lod a-lod lof-fun)
-    (cond [(empty? a-lod) empty]
-          [else (cons (apply-dir (first a-lod) lof-fun) (apply-lod (rest a-lod) lof-fun))]))
+    (map (lambda (a-dir) (apply-dir a-dir lof-fun)) a-lod))
+;    (cond [(empty? a-lod) empty]
+;          [else (cons (apply-dir (first a-lod) lof-fun) (apply-lod (rest a-lod) lof-fun))]))
   
   ;; Test Cases:
   (check-expect (apply-dir NUMBERS (lambda (lof) (map (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f)))) lof))) NUMBERS-2)
@@ -223,11 +224,7 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
   (cond[(symbol? a-FS) a-FS]
        [(dir? a-FS)
           (cond [(symbol=? (dir-name a-FS) a-name) #| clean this |#
-                 (make-dir
-                  (dir-name a-FS)
-                  (dir-dirs a-FS)
-                  (filter (lambda (a-file) (not (equal? (file-size a-file) 0)))
-                          (dir-files a-FS)))]
+                 (filter-dir a-FS (lambda (a-file) (not (equal? (file-size a-file) 0))))]
                 [else #|clean rest:: map list of dir, w/ clean dir|#
                  (cond [(empty?  (dir-dirs a-FS)) a-FS]
                        [else
@@ -240,8 +237,14 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
                                    (dir-dirs a-FS))
                          (dir-files a-FS))])])]))
 
+                        
 
-
+                      #|(apply-lod (dir-dirs a-FS) (map
+                          
+                                   (lambda (a-dir) (clean-directory a-dir a-name))
+                                   (dir-dirs a-FS)))])])]))
+|#
+;;(lambda (a-dir) (clean-directory a-dir a-name)
 (check-expect (clean-directory (make-dir 'test empty
                                          (list (make-file '0 0 empty)))
                                'test)

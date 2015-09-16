@@ -209,7 +209,9 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
   (check-expect (any-huge-files-LOF? LOF3 1) true)
   (check-expect (any-huge-files-LOF? LOF3 2) false)
   
-  ;; anyleft? list[alpha] (alpha -> bool) -> bool
+;; do-any-satisfy-condition? list[alpha] (alpha -> bool) -> bool
+;; consumes list and function ,returns true if any elements in that list will cause that function
+;; to evaluate to true
   (define (do-any-satisfy-condition? list fun)
     (> (length
         (filter
@@ -343,8 +345,8 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
                               (list 'name 'name1))
 
      ;; files-names-satisfying: FS (file -> bool) -> List of symbol
-     ;; gives list of names where (file->bool) bill be true for all files
-     
+     ;; gives list of names where (file->bool) will be true for all files
+ 
      ;; files-containing: FS value -> list of sybol
      ;; takes in a file system and uses file-names-satisfying to give back
      ;; a list of file names where each file has the given value as its contents

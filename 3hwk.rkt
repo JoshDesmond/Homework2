@@ -66,29 +66,32 @@
                    (make-file '2 2 empty)))
 ;; example file systems
 (define FS1 (make-dir '1 empty LOF1))
-(define FS2 (make-dir '2 (list FS1) LOF1))
-(define FS3 (make-dir '3 (list FS1 FS2) LOF1))
+(define FS2 (make-dir '2 (list FS1) LOF2))
+(define FS3 (make-dir '3 (list FS1 FS2) LOF3))
 
                    
  ;;any-huge-files?: FS num -> bool
 ;; consumes a File System and a number,
 ;;returns true if a file is above that size
-;(define (any-huge-files? a-FS num)
-;  (cond[(symbol? a-FS) false]
-;       [(dir? a-FS) (or
-;                     (any-huge-files-LOF? (dir-files a-FS) num)
-;                     (any-huge-files-DIR? (first (dir-dirs a-FS)) num))]))
-
+(define (any-huge-files? a-FS num)
+  (cond[(symbol? a-FS) false]
+       [(dir? a-FS) (or
+                     (any-huge-files-LOF? (dir-files a-FS) num)
+                     (any-huge-files-DIR?  (dir-dirs a-FS) num))]))
+(check-expect (any-huge-files? FS3 0)
+              true)
+(check-expect (any-huge-files? FS3 100)
+              false)
 ;; any-huge-files-DIR?: LOD-> bool
 ;; determines if a LOD has a huge file
-;(define (any-huge-files-DIR? a-LOD num)
-;  (> (length
-;         (filter
-;          (lambda (a-dir) (any-huge-files-LOF? (dir-files a-dir) num))
-;          a-LOD)
-;      0)))
-;;; tests:
-;;(check-expect (any-huge-files? FS3 0) true)
+(define (any-huge-files-DIR? a-LOD num)
+  (> (length
+         (filter
+          (lambda (a-dir) (any-huge-files-LOF? (dir-files a-dir) num))
+          a-LOD)
+      )0))
+;; tests:
+(check-expect (any-huge-files-DIR? (dir-dirs FS3) 0) true)
 ;;any-huge-files-LOF?: LOF num -> bool
 ;; determines if there is ahuge file in a list
 

@@ -99,6 +99,7 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 (define FS3 (make-dir '3 (list FS1 FS2) LOF3))
 
 
+;;;Abstraction: 
  ;;any-huge-files?: FS num -> bool
 ;; consumes a File System and a number,
 ;;returns true if a file is above that size
@@ -134,3 +135,17 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
      0))
 
 ;; clean-directory: FS symbol -> FS
+;; consumes file system and a name of a directory, removes all
+;; files size 0 in that directory
+
+;; find-file-path: FS symbol -> False OR list of symbol
+;; takes in a file system and a file name, gives back the list of dir
+;; names to get to that file
+
+;; files-names-satisfying: FS (file -> bool) -> List of symbol
+;; gives list of names where (file->bool) bill be true for all files
+
+;; files-containing: FS value -> list of sybol
+;; takes in a file system and uses file-names-satisfying to give back
+;; a list of file names where each file has the given value as its contents
+

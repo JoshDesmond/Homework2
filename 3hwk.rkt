@@ -10,8 +10,29 @@
 ;; any-huge-files?: (filesystem and a number -> boolean)
 ;; clean-directory: (filesystem and an existing directory name -> filesystem)
 ;; find-file-path: (filesystem and a filename -> either the path to that filename, or FALSE)
-;; file-names-satisfying: (filesystem and a function from file to boolean -> ist of names of files
+;; file-names-satisfying: (filesystem and a function from file to boolean -> list of names of files
 ;; files-containing: (filesystem and a value -> list of names of files)
+
+#|
+root: - lod: dir-r1, dir-r2, dir-r3
+      - lof: (make-file (r2
+dir-r1: - lod: empty
+        - lof: (make-file (r1f 10 'test))
+dir-r2: - lod: dir-r2-1
+        - lof: empty
+dir-r3: - lod: empty
+        - lof: file
+dir-r2-1: - lod: empty
+          - lof: file, file, file
+
+root: empty
+
+
+
+dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
+
+|#
+
 
 ;; directory 3: name List of directory List of Files
 ;; 2 list templates, and 1 directory template
@@ -77,7 +98,7 @@
 (define FS2 (make-dir '2 (list FS1) LOF2))
 (define FS3 (make-dir '3 (list FS1 FS2) LOF3))
 
-                   
+
  ;;any-huge-files?: FS num -> bool
 ;; consumes a File System and a number,
 ;;returns true if a file is above that size

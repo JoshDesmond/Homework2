@@ -1,7 +1,17 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")) #f)))
-3
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")))))
+;;  ============Structures============
+;;(define-struct file(name size content))
+;;(define-struct dir(name dirs files))
+;; list-of-directory is either...
+;; list-of-files is either...
+;; =============Functions=============
+;; any-huge-files?: (filesystem and a number -> boolean)
+;; clean-directory: (filesystem and an existing directory name -> filesystem)
+;; find-file-path: (filesystem and a filename -> either the path to that filename, or FALSE)
+;; file-names-satisfying: (filesystem and a function from file to boolean -> ist of names of files
+;; files-containing: (filesystem and a value -> list of names of files)
 
 ;; directory 3: name List of directory List of Files
 ;; 2 list templates, and 1 directory template
@@ -14,10 +24,8 @@
   (file-name a-file)...
   (file-size a-file) ...
   (file-content a-file)...
-
-
-
 |#
+
 ;;list-of-files is either
 ;; empty
 ;; (cons s lof) s is file, lof is a list of files

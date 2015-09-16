@@ -282,7 +282,66 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
      ;; find-file-path: FS symbol -> False OR list of symbol
      ;; takes in a file system and a file name, gives back the list of dir
      ;; names to get to that file
-     
+
+(define (find-file-path a-FS name)
+ (local [(define LIST (find-path-helper a-FS name empty))]
+   (cond [(empty? LIST) false]
+         [(cons? LIST) LIST])))
+
+  ;;;;;;
+(define (find-path-helper a-FS name a-LOS)
+  (cond [(symbol? a-FS) false]
+        [else #|do stuff|#
+         (cond [(do-any-satisfy-condition? (dir-files a-FS)
+                                          (lambda (a-file)
+                                            (symbol=? (file-name a-file) name)))
+               (append a-LOS (list (dir-name a-FS)))]
+               ;; if no children -> branch is over
+               [(empty? (dir-dirs a-FS)) empty]
+               [else
+                #|call this function on all children directories|#
+                (append
+                 a-LOS
+                 (find-file-path-LOD (dir-dirs a-FS)
+                                     name
+                                     (append (list (dir-name a-FS)) a-LOS)))])]))
+;;find-file-path-LOD : 
+(define (find-file-path-LOD a-LOD name a-LOS)
+  #| call find file path on each directory |#
+ (local [(define LIST (filter (lambda (elt) (cons? elt))
+   (map (lambda (a-dir) (find-path-helper a-dir name a-LOS)) a-LOD)))]
+   (cond [(empty? LIST) empty]
+         [else (first LIST)])))
+
+
+(check-expect (find-file-path (make-dir 'name empty empty) 'rand) false)
+(check-expect (find-file-path (make-dir 'name (list
+                                               (make-dir 'name empty empty))
+                                        empty)
+                              'rand)
+               
+                              false)
+(check-expect (find-file-path (make-dir 'name (list
+                                               (make-dir 'name empty empty))
+                                        empty)
+                              'rand)
+               
+                              false)
+
+(check-expect (find-file-path (make-dir 'name (list
+                                               (make-dir 'name1 empty empty))
+                                        (list (make-file 'target 1 1 )))
+                              'target)
+               
+                              (list 'name))
+(check-expect (find-file-path (make-dir 'name (list
+                                               (make-dir 'name1 empty
+                                                         (list (make-file 'target 1 1 ))))
+                                        empty)
+                              'target)
+               
+                              (list 'name 'name1))
+
      ;; files-names-satisfying: FS (file -> bool) -> List of symbol
      ;; gives list of names where (file->bool) bill be true for all files
      

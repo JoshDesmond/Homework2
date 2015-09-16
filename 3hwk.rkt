@@ -1,6 +1,6 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")))))
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")) #f)))
 ;;  ============Structures============
 ;;(define-struct file(name size content))
 ;;(define-struct dir(name dirs files))
@@ -93,22 +93,23 @@
 ;; any-huge-files-DIR?: LOD-> bool
 ;; determines if a LOD has a huge file
 (define (any-huge-files-DIR? a-LOD num)
-  (> (length
-         (filter
-          (lambda (a-dir) (any-huge-files-LOF? (dir-files a-dir) num))
-          a-LOD)
-      )0))
+  (do-any-satisfy-condition? a-LOD (lambda (a-dir) (any-huge-files? a-dir num))))
 ;; tests:
 (check-expect (any-huge-files-DIR? (dir-dirs FS3) 0) true)
 ;;any-huge-files-LOF?: LOF num -> bool
 ;; determines if there is ahuge file in a list
 
  (define (any-huge-files-LOF? a-LOF num)
-   (> (length
-         (filter
-          (lambda (a-file) (> (file-size a-file) num)) a-LOF))
-      0))
+   (do-any-satisfy-condition?  a-LOF (lambda (a-file) (> (file-size a-file) num))))
 (check-expect (any-huge-files-LOF? LOF3 1) true)
 (check-expect (any-huge-files-LOF? LOF3 2) false)
 
-              
+;; anyleft? list[alpha] (alpha -> bool) -> bool
+(define (do-any-satisfy-condition? list fun)
+  (> (length
+      (filter
+       fun list)
+      )
+     0))
+
+;; clean-directory: FS symbol -> FS

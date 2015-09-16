@@ -1,6 +1,6 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")) #f)))
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")))))
 ;;  ============Structures============
 ;;(define-struct file(name size content))
 ;;(define-struct dir(name dirs files))
@@ -8,22 +8,41 @@
 ;; list-of-files is either...
 ;; =============Functions=============
 ;; any-huge-files?: (filesystem and a number -> boolean)
+     ;; convert filesystem to list, filter the list -> list, false if 0.
 ;; clean-directory: (filesystem and an existing directory name -> filesystem)
-;; find-file-path: (filesystem and a filename -> either the path to that filename, or FALSE)
+     ;; for every directory, compare to the direcotry name, then get the list of files in the given directory, and filter the list of files in it.
+;; find-file-path: (filesystem and a filename -> list of directory names, or FALSE)
+     ;; for every directory, filter list -> list, if empty false
 ;; file-names-satisfying: (filesystem and a function from file to boolean -> list of names of files
+     ;; Convert filesystem to list, map list -> list
 ;; files-containing: (filesystem and a value -> list of names of files)
+
 
 #|
 root: - lod: dir-r1, dir-r2, dir-r3
       - lof: (make-file (r2
 dir-r1: - lod: empty
-        - lof: (make-file (r1f 10 'test))
+        - lof: (make-file ('r1f 10 'test))
 dir-r2: - lod: dir-r2-1
         - lof: empty
 dir-r3: - lod: empty
         - lof: file
 dir-r2-1: - lod: empty
           - lof: file, file, file
+
+;; folders:
+(define F1 (make-dir 'f1 empty empty))
+(define F2 (make-dir 'f2 empty 
+
+;; Files:
+(define FLARGE1 (make-file 'flarge1 200 'large))
+(define FLARGE2 (make-file 'flarge2 200 'large))
+(define FMED1 (make-file 'med1 100 'med))
+(define FSMALL1 (make-file 'small1 5 'small))
+(define FSMALL2 (make-file 'small2 6 (+ 5 5)))
+(define FZERO (make-file 'zero1 0 "zero"))
+
+(define LOF-F1 (list(FLARGE
 
 root: empty
 

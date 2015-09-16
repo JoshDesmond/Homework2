@@ -8,15 +8,23 @@
 ;; list-of-files is either...
 ;; =============Functions=============
 ;; any-huge-files?: (filesystem and a number -> boolean)
-     ;; convert filesystem to list, filter the list -> list, false if 0.
+     ;; filter the list -> list, false if 0.
 ;; clean-directory: (filesystem and an existing directory name -> filesystem)
      ;; for every directory, compare to the direcotry name, then get the list of files in the given directory, and filter the list of files in it.
 ;; find-file-path: (filesystem and a filename -> list of directory names, or FALSE)
      ;; for every directory, filter list -> list, if empty false
 ;; file-names-satisfying: (filesystem and a function from file to boolean -> list of names of files
-     ;; Convert filesystem to list, map list -> list
+     ;; 
 ;; files-containing: (filesystem and a value -> list of names of files)
+     ;;
+;; (define (apply-dir a-dir lof-fun) -> a-dir
+;; (define (apply-lod a-lod lof-fun) -> a-lod
+;; (define (filter-dir a-dir file-cond) -> a-dir
+;; (define (map-dir a-dir file-fun) -> a-dir
 
+;(define (huge-files? fs n))
+
+(define Huge? (lambda (f) (> (file-size f) 50))
 
 #|
 root: - lod: dir-r1, dir-r2, dir-r3
@@ -109,16 +117,17 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 (define FN-1 (make-file 'a 5 0))
 (define FN-2 (make-file 'a 5 1))
 (define FS-1 (make-file 'a 5 's))
+(define DE (make-dir 'empty empty empty))
 (define NUMBERS1 (make-dir 'numbers1 empty (list FN-1 FN-1)))
-(define NUMBERS (make-dir 'numbers (list NUMBERS1 NUMBERS1) (list FN-1 FN-1)))
+(define NUMBERS (make-dir 'numbers (list NUMBERS1 NUMBERS1 DE) (list FN-1 FN-1)))
 (define NUMBERS-21 (make-dir 'numbers1 empty (list FN-2 FN-2)))
-(define NUMBERS-2 (make-dir 'numbers (list NUMBERS-21 NUMBERS-21) (list FN-2 FN-2))) 
+(define NUMBERS-2 (make-dir 'numbers (list NUMBERS-21 NUMBERS-21 DE) (list FN-2 FN-2))) 
 
 (define FILTERNUM (lambda (lof) (filter (lambda (f) (number? (file-content f))) lof)))
 (define MIXED1 (make-dir 'm1 empty (list FN-1 FN-2 FS-1)))
 (define MIXED-21 (make-dir 'm1 empty (list FN-1 FN-2)))
-(define MIXED (make-dir 'm (list MIXED1 MIXED1) (list FN-1)))
-(define MIXED-2 (make-dir 'm (list MIXED-21 MIXED-21) (list FN-1)))
+(define MIXED (make-dir 'm (list MIXED1 MIXED1 DE DE) (list FN-1)))
+(define MIXED-2 (make-dir 'm (list MIXED-21 MIXED-21 DE DE) (list FN-1)))
 
 ;; =============High Level Functions==============
 ;; apply-dir: (a-dir, (list[files] -> x) -> a-dir)

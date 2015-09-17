@@ -334,7 +334,7 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 ;; file-names-satisfying: FS (file -> bool)-> List of symbol
 ;; gives list of names where (file->bool) will be true for all files
 (define (file-names-satisfying adir fcond)
-  (flatten-dir (filter-dir adir fcond)))
+  (map (lambda (a-file) (file-name a-file)) (flatten-dir (filter-dir adir fcond))))
 ;; Test Cases
 (define IS-FIL (lambda (f) (and (equal? (file-name f) 'name) 
                                  (= 5 (file-size f))
@@ -342,10 +342,10 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 (define IS-FIL2 (lambda (f) (and (equal? (file-name f) 'name) 
                                  (= 6 (file-size f))
                                  (equal? (file-content f) 'conte))))
-(check-expect (file-names-satisfying DIRZ IS-FIL) (list FIL FIL FIL FIL FIL))
-(check-expect (file-names-satisfying DIRZ IS-FIL2) (list FIL2))
+(check-expect (file-names-satisfying DIRZ IS-FIL) (map (lambda (a-file) (file-name a-file)) (list FIL FIL FIL FIL FIL)))
+(check-expect (file-names-satisfying DIRZ IS-FIL2) (map (lambda (a-file) (file-name a-file))(list FIL2)))
 (check-expect (file-names-satisfying DIRZ (lambda (f) false)) empty)
-(check-expect (file-names-satisfying DIRZ (lambda (f) true)) (list FIL FIL FIL FIL FIL2 FIL))
+(check-expect (file-names-satisfying DIRZ (lambda (f) true)) (map (lambda (a-file) (file-name a-file))(list FIL FIL FIL FIL FIL2 FIL)))
 
                                      
 ;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     
@@ -366,5 +366,7 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 ;; takes in a file system and uses file-names-satisfying to give back
 ;; a list of file names where each file has the given value as its contents
 (define (files-containing a-dir val)
-  (file-names-satisfying a-dir (lambda (a-file) (equal? a-file val))))
+  (file-names-satisfying a-dir (lambda (a-file) (equal? (file-content a-file) val))))
 
+(check-expect (files-containing DIRZ 'cont) (list 'name 'name 'name 'name 'name))
+(check-expect (files-containing DIRZ 'nothin) empty)

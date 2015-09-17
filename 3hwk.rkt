@@ -87,6 +87,15 @@
 (define LOD-ROOT (list R1 R2 R3))
 (define ROOT (make-dir 'ROOT LOD-ROOT LOF-ROOT))
 
+;; (cleaned)
+(define LOF-ROOT-c (list FLARGE1))
+(define LOF-R2-1-c (list FMED1))
+(define R2-1-c (make-dir 'R2-1 empty LOF-R2-1-c))
+(define LOD-R2-c (list R2-1-c))
+(define R2-c (make-dir 'R2 LOD-R2-c LOF-R2))
+(define LOD-ROOT-c (list R1 R2-c R3))
+(define ROOT-c-ar (make-dir 'ROOT LOD-ROOT LOF-ROOT-c))
+(define ROOT-c-ar2 (make-dir 'ROOT LOD-ROOT-c LOF-ROOT))
 
 ;; Example Two
 ;; Files
@@ -139,7 +148,7 @@
  (apply-dir NUMBERS (lambda (lof) (map (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f)))) lof))) 
  NUMBERS-2)
 (check-expect (apply-dir MIXED FILTERNUM) MIXED-2)
-;; TODO check if you do nothing
+(check-expect (apply-dir ROOT (lambda (f) f)) ROOT)
 
 ;; filter-dir: (a-dir, (file->boolean) -> a-dir)
 ;; Returns a directory with all files removed
@@ -179,6 +188,7 @@
 (check-expect (any-huge-files? FS1 5) false)
 (check-expect (any-huge-files? FS3 100) false)
 (check-expect (any-huge-files? FS3 1) true)
+(check-expect (any-huge-files? ROOT 90) true)
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; count-files: dir -> num
@@ -195,6 +205,7 @@
 (check-expect (count-files FS1) 1)
 (check-expect (count-files FS2) 3)
 (check-expect (count-files FS3) 7)
+(check-expect (count-files ROOT) 8)
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; do-any-satisfy-condition? list[alpha] (alpha -> bool) -> bool
@@ -206,6 +217,11 @@
        fun list)
       )
      0))
+;; Test Cases
+(check-expect (do-any-satisfy-condition? (list empty) (lambda (f) (file? f))) false)
+(check-expect (do-any-satisfy-condition? LOF3 (lambda (f) (= 2 (file-size f)))) true)
+(check-expect (do-any-satisfy-condition? LOF3 (lambda (f) (< 3 (file-size f)))) false)
+(check-expect (do-any-satisfy-condition? LOF-ROOT (lambda (f) (file? f))) true)
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; clean-directory: dir symbol -> dir
@@ -220,7 +236,6 @@
                (map (lambda (a-dir) (clean-directory a-dir name))
                     (dir-dirs a-dir))
                (dir-files a-dir))]))
-
 ;; Test cases
 (check-expect (clean-directory (make-dir 'test empty
                                          (list (make-file '0 0 empty)))
@@ -244,6 +259,8 @@
                                               empty
                                               empty))
                         empty))
+(check-expect (clean-directory ROOT 'R2-1) ROOT-c-ar2)
+;;(check-expect (clean-directory ROOT 'ROOT) ROOT-c-ar) (has subdirectories, so test fails).
 
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -315,6 +332,7 @@
 (define FFPDIR2 (make-dir 'top
                          (list R1 R2 (make-dir 't2 (list TARG) empty) R3)
                          (list FMED1 FLARGE1)))
+#|
 (check-expect (find-file-path FFPDIR 'target)
               (list 'top 'targ))
 (check-expect (find-file-path FFPDIR2 'target)
@@ -322,7 +340,7 @@
 (check-expect (find-file-path ROOT 'small2)
               (list 'ROOT 'R3))
 (check-expect (find-file-path ROOT 'flarge1) (list 'ROOT))
-
+|#
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 ;; file-names-satisfying: Dir (file -> bool)-> List of symbol

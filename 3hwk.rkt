@@ -307,8 +307,21 @@
                                         empty)
                               'target)
               (list 'name 'name1))
+
+(define TARG (make-dir 'targ (list R1) (list FMED1 (make-file 'target 1 1)  FLARGE2)))
+(define FFPDIR (make-dir 'top
+                         (list R1 R2 TARG R3)
+                         (list FMED1 FLARGE1)))
+(define FFPDIR2 (make-dir 'top
+                         (list R1 R2 (make-dir 't2 (list TARG) empty) R3)
+                         (list FMED1 FLARGE1)))
+(check-expect (find-file-path FFPDIR 'target)
+              (list 'top 'targ))
+(check-expect (find-file-path FFPDIR2 'target)
+              (list 'top 't2 'targ))
 (check-expect (find-file-path ROOT 'small2)
               (list 'ROOT 'R3))
+(check-expect (find-file-path ROOT 'flarge1) (list 'ROOT))
 
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`

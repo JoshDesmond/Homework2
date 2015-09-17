@@ -366,5 +366,5 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 ;; takes in a file system and uses file-names-satisfying to give back
 ;; a list of file names where each file has the given value as its contents
 (define (files-containing a-dir val)
-  (files-names-satisfying a-dir (lambda (a-file) (equal? a-file val))))
+  (file-names-satisfying a-dir (lambda (a-file) (equal? a-file val))))
 

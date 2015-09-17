@@ -85,19 +85,17 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 #|Dir template
 (define (dirFun a-dir)
   (dir-name a-dir)...
-  (LODFun (first (dir-dirs a-dir))) ...
-  (LOFFun (first (dir-files a-dir)))...
+  (LODFun (dir-dirs a-dir))...
+  (first (dir-files a-dir))...
 |#
 
-
 ;;list-of-directory is either
-;; empty
-;; (cons s lod) where s is a symbol name and lod is a list of directories
-
+;; empty, or
+;; (cons dir lod)
 #|LOD template
 (define (LODFun a-LOD)
-   (cond [(empty? a-list) ...]
-         [(cons? a-list) (dirFun(first a-LOD)) ...
+   (cond [(empty? a-LOD) ...]
+         [(cons? a-LOD) (dirFun(first a-LOD)) ...
                          (LODFun (rest a-LOD))...]
 |#
 
@@ -118,25 +116,25 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 (define MIXED (make-dir 'm (list MIXED1 MIXED1 DE DE) (list FN-1)))
 (define MIXED-2 (make-dir 'm (list MIXED-21 MIXED-21 DE DE) (list FN-1)))
 
+
 ;; =============High Level Functions==============
 ;; apply-dir: (a-dir, (list[files] -> list[files]) -> a-dir)
 ;; Applies the given lof-fun to every single lof
 ;; throughout the entire file system
 (define (apply-dir a-dir lof-fun)
-  (cond [(empty? a-dir) empty]
-        [else (make-dir (dir-name a-dir) (apply-lod (dir-dirs a-dir) lof-fun) (lof-fun (dir-files a-dir)))]))
+  (make-dir (dir-name a-dir) 
+            (apply-lod (dir-dirs a-dir) lof-fun) 
+            (lof-fun (dir-files a-dir))))
 ;; apply-lod: (a-lod, (list[files]-> x) -> a-lod)
 ;; Applies the given lof-fun to every single lof
 ;; in every directory in the list, and within all
 ;; subdirectories/throughout the entire file system.
 (define (apply-lod a-lod lof-fun)
   (map (lambda (a-dir) (apply-dir a-dir lof-fun)) a-lod))
-;    (cond [(empty? a-lod) empty]
-;          [else (cons (apply-dir (first a-lod) lof-fun) (apply-lod (rest a-lod) lof-fun))]))
-
 ;; Test Cases:
 (check-expect (apply-dir NUMBERS (lambda (lof) (map (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f)))) lof))) NUMBERS-2)
 (check-expect (apply-dir MIXED FILTERNUM) MIXED-2)
+;; TODO check if you do nothing
 
 ;; filter-dir: (a-dir, (file->boolean) -> a-dir)
 ;; Returns a directory with all files removed
@@ -145,6 +143,7 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 (define (filter-dir a-dir file-cond)
   (apply-dir a-dir (lambda (lof) (filter file-cond lof))))
 (check-expect (filter-dir MIXED (lambda (f) (number? (file-content f)))) MIXED-2)
+;; TODO Test Case
 
 ;; map-dir (a-dir, (file->file) -> a-dir)
 ;; Returns a directory with the given function
@@ -154,6 +153,7 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
   (apply-dir a-dir (lambda (lof) (map file-fun lof))))
 ;; Test Cases
 (check-expect (map-dir NUMBERS (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f))))) NUMBERS-2)
+;; TODO Test Case
 
 
 
@@ -176,19 +176,32 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 ;; Returns true if any of the files within the entire directory
 ;; structure are above the given size.
 (define (any-huge-files? a-dir size)
-  (< 0 (length (flatten-dir (filter-dir a-dir (lambda (f) (< size (file-size f))))))))
+  (< 0 (count-files (filter-dir a-dir (lambda (f) (< size (file-size f)))))))
 ;; The above method works by seeing if
-;; The length of the flattened version of the filtered directory is
+;; The number of files within the filtered directory is
 ;; greater than zero. If it is, that means at least one file was in the
-;; directory after the filter was applied. See flatten-dir for details on
-;; how that works.
-                                         
+;; directory after the filter was applied.
 ;; Test Cases
 (check-expect (any-huge-files? FS3 0) true)
 (check-expect (any-huge-files? FS1 5) false)
 (check-expect (any-huge-files? FS3 100) false)
 (check-expect (any-huge-files? FS3 1) true)
 
+;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;; count-files: dir -> num
+;; counts the number of files in the entire directory
+(define (count-files a-dir)
+  (+ (length (dir-files a-dir))
+     (count-dirs-files (dir-dirs a-dir))))
+;; count-dirs-files: a-lod -> num
+(define (count-dirs-files a-lod)
+  (cond [(empty? a-lod) 0]
+        [else (+ (count-files (first a-lod))
+                 (count-dirs-files (rest a-lod)))]))
+;;Test Cases:
+(check-expect (count-files FS1) 1)
+(check-expect (count-files FS2) 3)
+(check-expect (count-files FS3) 7)
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; do-any-satisfy-condition? list[alpha] (alpha -> bool) -> bool
@@ -201,23 +214,20 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
       )
      0))
 
-;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;; clean-directory: FS symbol -> FS
-;; consumes file system and a name of a directory, removes all
+;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;; clean-directory: dir symbol -> dir
+;; consumes a dir and a name of a directory, removes all
 ;; files size 0 in that directory
-(define (clean-directory a-FS a-name)
-  (cond [(symbol=? (dir-name a-FS) a-name) #| clean this |#
-         (filter-dir a-FS (lambda (a-file) (not (equal? (file-size a-file) 0))))]
-        [else #|clean rest:: map list of dir, w/ clean dir|#
-         (cond [(empty?  (dir-dirs a-FS)) a-FS]
-               [else
-                ;; we want to map the dirs, each dir gets clean directory applied to it, givng back a clean directory
-                (make-dir
-                 (dir-name a-FS)
-                 (map                        
-                  (lambda (a-dir) (clean-directory a-dir a-name))
-                  (dir-dirs a-FS))
-                 (dir-files a-FS))])])) 
+(define (clean-directory a-dir name)
+  (cond [(symbol=? (dir-name a-dir) name) #| clean this |#
+         (filter-dir a-dir (lambda (f) (not (equal? (file-size f) 0))))]
+        [else ;; we want to map the dirs, each dir gets clean directory applied to it, givng back a clean directory
+         (make-dir
+               (dir-name a-dir)
+               (map (lambda (a-dir) (clean-directory a-dir name))
+                    (dir-dirs a-dir))
+               (dir-files a-dir))]))
+
 ;; Test cases
 (check-expect (clean-directory (make-dir 'test empty
                                          (list (make-file '0 0 empty)))
@@ -243,6 +253,32 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
                         empty))
 
 
+;; TODO: Note:
+;; I'm concerned find-file-path isn't going to get full
+;; credit because it doesn't follow the template at all.
+;; One idea I had for doing this that would both simplify
+;; the algorithm (making it far less of a pain for the graders)
+;; and to make it follow the template is to
+;; 1.) filter out files which aren't named after the one you want
+;; 2.) filter out folders which are empty
+;; 3.) crawl through and build a list of each subdirectory
+;;         (there would only ever be one sub)
+
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;; remove-all-but: dir, file-name -> dir
+;; produces a directory with all files,
+;; but ones with the given name removed
+(define (remove-all-but a-dir name)
+  (filter-dir a-dir (lambda (f) (equal? (file-name f) name))))
+;; Test Cases
+(define RADIR (make-dir '1 (list (make-dir '2 empty (list (make-file '2 2 2)))) 
+                        (list (make-file 'target 2 3))))
+(define RADIR2 (make-dir '1 (list (make-dir '2 empty empty)) 
+                        (list (make-file 'target 2 3))))
+(check-expect (remove-all-but RADIR 'target) RADIR2)
+
+;; remove-all-empty-folders: dir -> dir
+;;
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; find-file-path: FS symbol -> False OR list of symbol
@@ -253,30 +289,25 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
     (cond [(empty? LIST) false]
           [(cons? LIST) LIST])))
 
-;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;; find-path-helper: Dir, file-name, list of strings -> 
+;; contains?: dir file -> boolean returns true if a directory or any of its
+
+;; find-path-helper: Dir, file, list of strings -> list of file names
 ;;
 ;; a helper function for find-file-path and find-path-helper
+(define (find-path-helper a-FS name a-LOS)      
+  (cond [(do-any-satisfy-condition? 
+          (dir-files a-FS) (lambda (a-file) (symbol=? (file-name a-file) name)))
+         (append a-LOS (list (dir-name a-FS)))]
+        ;; if no children -> branch is over
+        [(empty? (dir-dirs a-FS)) empty]
+        [else
+         #|call this function on all children directories|#
+         (append
+          a-LOS
+          (find-file-path-LOD (dir-dirs a-FS)
+                              name
+                              (append (list (dir-name a-FS)) a-LOS)))]))
 
-(define (find-path-helper a-FS name a-LOS)
-  (cond [(symbol? a-FS) false]
-        [else #|do stuff|#
-         (cond [(do-any-satisfy-condition? (dir-files a-FS)
-                                           (lambda (a-file)
-                                             (symbol=? (file-name a-file) name)))
-                (append a-LOS (list (dir-name a-FS)))]
-               ;; if no children -> branch is over
-               [(empty? (dir-dirs a-FS)) empty]
-               [else
-                #|call this function on all children directories|#
-                (append
-                 a-LOS
-                 (find-file-path-LOD (dir-dirs a-FS)
-                                     name
-                                     (append (list (dir-name a-FS)) a-LOS)))])]))
-
-
-;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;;find-file-path-LOD : TODO
 (define (find-file-path-LOD a-LOD name a-LOS)
   #| call find file path on each directory |#

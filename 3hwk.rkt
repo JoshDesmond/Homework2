@@ -1,6 +1,6 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")) #f)))
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")))))
 ;;  ============Structures============
 ;;(define-struct file(name size content))
 ;;(define-struct dir(name dirs files))
@@ -24,7 +24,7 @@
 
 ;(define (huge-files? fs n))
 
-(define Huge? (lambda (f) (> (file-size f) 50)))
+
 
 #|
 root: - lod: dir-r1, dir-r2, dir-r3
@@ -172,36 +172,22 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;;any-huge-files?: FS num -> bool
-;; consumes a File System and a number,
-;;returns true if a file is above that size
-(define (any-huge-files? a-FS num)
-  (cond[(symbol? a-FS) false]
-       [(dir? a-FS) (or
-                     (any-huge-files-LOF? (dir-files a-FS) num)
-                     (any-huge-files-DIR?  (dir-dirs a-FS) num))]))
-(check-expect (any-huge-files? FS3 0)
-              true)
-(check-expect (any-huge-files? FS3 100)
-              false)
-
-
-;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;; any-huge-files-DIR?: LOD-> bool
-;; determines if a LOD has a huge file
-(define (any-huge-files-DIR? a-LOD num)
-  (do-any-satisfy-condition? a-LOD (lambda (a-dir) (any-huge-files? a-dir num))))
-;; tests:
-(check-expect (any-huge-files-DIR? (dir-dirs FS3) 0) true)
-
-
-;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;;any-huge-files-LOF?: LOF num -> bool
-;; determines if there is ahuge file in a list
-(define (any-huge-files-LOF? a-LOF num)
-  (do-any-satisfy-condition?  a-LOF (lambda (a-file) (> (file-size a-file) num))))
-(check-expect (any-huge-files-LOF? LOF3 1) true)
-(check-expect (any-huge-files-LOF? LOF3 2) false)
+;; any-huge-files?: Dir num -> boolean
+;; Returns true if any of the files within the entire directory
+;; structure are above the given size.
+(define (any-huge-files? a-dir size)
+  (< 0 (length (flatten-dir (filter-dir a-dir (lambda (f) (< size (file-size f))))))))
+;; The above method works by seeing if
+;; The length of the flattened version of the filtered directory is
+;; greater than zero. If it is, that means at least one file was in the
+;; directory after the filter was applied. See flatten-dir for details on
+;; how that works.
+                                         
+;; Test Cases
+(check-expect (any-huge-files? FS3 0) true)
+(check-expect (any-huge-files? FS1 5) false)
+(check-expect (any-huge-files? FS3 100) false)
+(check-expect (any-huge-files? FS3 1) true)
 
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -268,7 +254,10 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
           [(cons? LIST) LIST])))
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;; TODO
+;; find-path-helper: Dir, file-name, list of strings -> 
+;;
+;; a helper function for find-file-path and find-path-helper
+
 (define (find-path-helper a-FS name a-LOS)
   (cond [(symbol? a-FS) false]
         [else #|do stuff|#
@@ -291,12 +280,12 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 ;;find-file-path-LOD : TODO
 (define (find-file-path-LOD a-LOD name a-LOS)
   #| call find file path on each directory |#
-  (local [(define LIST (filter (lambda (elt) (cons? elt))
+  (local [(define LIST 
+            (filter (lambda (elt) (cons? elt))
                                (map (lambda (a-dir) (find-path-helper a-dir name a-LOS)) a-LOD)))]
     (cond [(empty? LIST) empty]
           [else (first LIST)])))
-
-
+;; Test Cases:
 (check-expect (find-file-path (make-dir 'name empty empty) 'rand) false)
 (check-expect (find-file-path (make-dir 'name (list
                                                (make-dir 'name empty empty))
@@ -325,17 +314,19 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
               
               (list 'name 'name1))
 
-;; Files systems for use in test case below
-(define FIL (make-file 'name 5 'cont))
-(define FIL2 (make-file 'name 6 'conte))
-(define DIRZ (make-dir 'name3 (list (make-dir 'name empty (list FIL FIL FIL)) (make-dir 'name2 empty (list FIL))) (list FIL2 FIL)))
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 ;; file-names-satisfying: FS (file -> bool)-> List of symbol
-;; gives list of names where (file->bool) will be true for all files
+;; gives list of file names, for which (file->bool) evaluates to true
+;; for the given file. Returns files in inner directories first, left to right, 
+;; then outermost files.
 (define (file-names-satisfying adir fcond)
-  (map (lambda (a-file) (file-name a-file)) (flatten-dir (filter-dir adir fcond))))
+  (map (lambda (a-file) (file-name a-file)) ;; Maps each file -> its name 
+       (flatten-dir (filter-dir adir fcond)))) ;; Of the list of filtered files.
 ;; Test Cases
+(define FIL (make-file 'name 5 'cont))
+(define FIL2 (make-file 'name 6 'conte))
+(define DIRZ (make-dir 'name3 (list (make-dir 'name empty (list FIL FIL FIL)) (make-dir 'name2 empty (list FIL))) (list FIL2 FIL)))
 (define IS-FIL (lambda (f) (and (equal? (file-name f) 'name) 
                                  (= 5 (file-size f))
                                  (equal? (file-content f) 'cont))))
@@ -349,9 +340,13 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 
                                      
 ;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     
-;; flatten-dir: (dir -> list of files)
+;; flatten-dir: (dir -> list of its files)
 ;; Consumes a directory, and returns a list of files of
-;; everything in the directory. Returns files in inner directories first, left to right, then outside file.
+;; everything in the directory. Returns files in inner directories first, left to right, 
+;; then outside file.
+;; Note that if a directories "files" are not actually files, this method will not do any 
+;; type checking. Therefor, it is safe to call flatten-dir with dir-files not actually 
+;; being a list of files.
 (define (flatten-dir dir)
   (append (flatten-lod (dir-dirs dir)) (dir-files dir)))
 ;; flatten-lod is a helper function for flatten-dir
@@ -361,12 +356,17 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
         [else (append (flatten-dir (first lod)) (flatten-lod (rest lod)))]))
 ;; Test Cases
 (check-expect (flatten-dir DIRZ) (list FIL FIL FIL FIL FIL2 FIL))
+;; TODO Test Cases
 
+
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; files-containing: FS value -> list of sybol
-;; takes in a file system and uses file-names-satisfying to give back
-;; a list of file names where each file has the given value as its contents
+;; Consumes a file system and a value and produces a list of files names
+;; which contain the given value as its contents.
 (define (files-containing a-dir val)
   (file-names-satisfying a-dir (lambda (a-file) (equal? (file-content a-file) val))))
 
 (check-expect (files-containing DIRZ 'cont) (list 'name 'name 'name 'name 'name))
+(check-expect (files-containing DIRZ 'conte) (list 'name))
 (check-expect (files-containing DIRZ 'nothin) empty)
+(check-expect (files-containing DIRZ (make-posn 5 5)) empty)

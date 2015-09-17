@@ -253,33 +253,6 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
                         empty))
 
 
-;; TODO: Note:
-;; I'm concerned find-file-path isn't going to get full
-;; credit because it doesn't follow the template at all.
-;; One idea I had for doing this that would both simplify
-;; the algorithm (making it far less of a pain for the graders)
-;; and to make it follow the template is to
-;; 1.) filter out files which aren't named after the one you want
-;; 2.) filter out folders which are empty
-;; 3.) crawl through and build a list of each subdirectory
-;;         (there would only ever be one sub)
-
-;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;; remove-all-but: dir, file-name -> dir
-;; produces a directory with all files,
-;; but ones with the given name removed
-(define (remove-all-but a-dir name)
-  (filter-dir a-dir (lambda (f) (equal? (file-name f) name))))
-;; Test Cases
-(define RADIR (make-dir '1 (list (make-dir '2 empty (list (make-file '2 2 2)))) 
-                        (list (make-file 'target 2 3))))
-(define RADIR2 (make-dir '1 (list (make-dir '2 empty empty)) 
-                        (list (make-file 'target 2 3))))
-(check-expect (remove-all-but RADIR 'target) RADIR2)
-
-;; remove-all-empty-folders: dir -> dir
-;;
-
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; find-file-path: FS symbol -> False OR list of symbol
 ;; takes in a file system and a file name, gives back the list of dir
@@ -288,8 +261,6 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
   (local [(define LIST (find-path-helper a-FS name empty))]
     (cond [(empty? LIST) false]
           [(cons? LIST) LIST])))
-
-;; contains?: dir file -> boolean returns true if a directory or any of its
 
 ;; find-path-helper: Dir, file, list of strings -> list of file names
 ;;
@@ -311,11 +282,11 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 ;;find-file-path-LOD : TODO
 (define (find-file-path-LOD a-LOD name a-LOS)
   #| call find file path on each directory |#
-  (local [(define LIST 
-            (filter (lambda (elt) (cons? elt))
-                               (map (lambda (a-dir) (find-path-helper a-dir name a-LOS)) a-LOD)))]
-    (cond [(empty? LIST) empty]
-          [else (first LIST)])))
+         (local [(define LIST 
+                   (filter (lambda (elt) (cons? elt))
+                           (map (lambda (a-dir) (find-path-helper a-dir name a-LOS)) a-LOD)))]
+           (cond [(empty? LIST) empty]
+                 [else (first LIST)])))
 ;; Test Cases:
 (check-expect (find-file-path (make-dir 'name empty empty) 'rand) false)
 (check-expect (find-file-path (make-dir 'name (list

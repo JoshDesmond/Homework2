@@ -1,69 +1,18 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
 #reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")))))
-;;  ============Structures============
+;; Josh Desmond &
+;; Saahil Claypool
+
+
+;; =============Structures============
 ;;(define-struct file(name size content))
 ;;(define-struct dir(name dirs files))
 ;; list-of-directory is either...
 ;; list-of-files is either...
-;; =============Functions=============
-;; any-huge-files?: (filesystem and a number -> boolean)
-;; filter the list -> list, false if 0.
-;; clean-directory: (filesystem and an existing directory name -> filesystem)
-;; for every directory, compare to the direcotry name, then get the list of files in the given directory, and filter the list of files in it.
-;; find-file-path: (filesystem and a filename -> list of directory names, or FALSE)
-;; for every directory, filter list -> list, if empty false
-;; file-names-satisfying: (filesystem and a function from file to boolean -> list of names of files
-;; 
-;; files-containing: (filesystem and a value -> list of names of files)
-;;
-;; (define (apply-dir a-dir lof-fun) -> a-dir
-;; (define (apply-lod a-lod lof-fun) -> a-lod
-;; (define (filter-dir a-dir file-cond) -> a-dir
-;; (define (map-dir a-dir file-fun) -> a-dir
+;; ====================================
 
-;(define (huge-files? fs n))
-
-
-
-#|
-root: - lod: dir-r1, dir-r2, dir-r3
-      - lof: (make-file (r2
-dir-r1: - lod: empty
-        - lof: (make-file ('r1f 10 'test))
-dir-r2: - lod: dir-r2-1
-        - lof: empty
-dir-r3: - lod: empty
-        - lof: file
-dir-r2-1: - lod: empty
-          - lof: file, file, file
-
-;; folders:
-(define F1 (make-dir 'f1 empty empty))
-(define F2 (make-dir 'f2 empty 
-
-;; Files:
-(define FLARGE1 (make-file 'flarge1 200 'large))
-(define FLARGE2 (make-file 'flarge2 200 'large))
-(define FMED1 (make-file 'med1 100 'med))
-(define FSMALL1 (make-file 'small1 5 'small))
-(define FSMALL2 (make-file 'small2 6 (+ 5 5)))
-(define FZERO (make-file 'zero1 0 "zero"))
-
-(define LOF-F1 (list(FLARGE
-
-root: empty
-
-
-
-dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
-
-|#
-
-
-;; directory 3: name List of directory List of Files
-;; 2 list templates, and 1 directory template
-
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;;file is a (make-file symbol number value)
 ;; symbol is name, s is size x is content
 (define-struct file(name size content))
@@ -73,12 +22,20 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
   (file-size a-file) ...
   (file-content a-file)...
 |#
+;; !!! NOTE: For examples, see the section after
+;; structures. Examples of structures are bundled
+;; together in order to make the structure of
+;; directories more clear. This applies to all
+;; structure definitions.
 
+
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;;list-of-files is either
 ;; empty
 ;; (cons s lof) s is file, lof is a list of files
 
 
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; dir is (make-dir symbol list-of-directory list-of-file)
 ;; Throughout the code, directories are often labeled as fs, or filesystems.
 (define-struct dir(name dirs files))
@@ -89,6 +46,8 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
   (first (dir-files a-dir))...
 |#
 
+
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;;list-of-directory is either
 ;; empty, or
 ;; (cons dir lod)
@@ -100,24 +59,66 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 |#
 
 
-;; For use in test cases for the following four functions:
+;; ============================================
+;; =============Example Directories============
+;; ============================================
+;; Example One:
+;; Files:
+(define FLARGE1 (make-file 'flarge1 200 'large))
+(define FLARGE2 (make-file 'flarge2 200 'large))
+(define FMED1 (make-file 'med1 100 'med))
+(define FSMALL1 (make-file 'small1 5 'small))
+(define FSMALL2 (make-file 'small2 6 (+ 5 5)))
+(define FZERO (make-file 'zero1 0 "zero"))
+
+;; LOFs
+(define LOF-ROOT (list FLARGE1 FZERO))
+(define LOF-R1 (list FLARGE2 FMED1))
+(define LOF-R2 empty)
+(define LOF-R3 (list FSMALL1 FSMALL2))
+(define LOF-R2-1 (list FMED1 FZERO))
+
+;; Dirs and LODs
+(define R2-1 (make-dir 'R2-1 empty LOF-R2-1))
+(define R1 (make-dir 'R1 empty LOF-R1))
+(define LOD-R2 (list R2-1))
+(define R2 (make-dir 'R2 LOD-R2 LOF-R2))
+(define R3 (make-dir 'R3 empty LOF-R3))
+(define LOD-ROOT (list R1 R2 R3))
+(define ROOT (make-dir 'ROOT LOD-ROOT LOF-ROOT))
+
+
+;; Example Two
+;; Files
 (define FN-1 (make-file 'a 5 0))
 (define FN-2 (make-file 'a 5 1))
 (define FS-1 (make-file 'a 5 's))
+
+;; Directories (Numbers are for indication during test cases)
 (define DE (make-dir 'empty empty empty))
 (define NUMBERS1 (make-dir 'numbers1 empty (list FN-1 FN-1)))
 (define NUMBERS (make-dir 'numbers (list NUMBERS1 NUMBERS1 DE) (list FN-1 FN-1)))
 (define NUMBERS-21 (make-dir 'numbers1 empty (list FN-2 FN-2)))
 (define NUMBERS-2 (make-dir 'numbers (list NUMBERS-21 NUMBERS-21 DE) (list FN-2 FN-2))) 
-
-(define FILTERNUM (lambda (lof) (filter (lambda (f) (number? (file-content f))) lof)))
 (define MIXED1 (make-dir 'm1 empty (list FN-1 FN-2 FS-1)))
 (define MIXED-21 (make-dir 'm1 empty (list FN-1 FN-2)))
 (define MIXED (make-dir 'm (list MIXED1 MIXED1 DE DE) (list FN-1)))
 (define MIXED-2 (make-dir 'm (list MIXED-21 MIXED-21 DE DE) (list FN-1)))
 
+;; Example Three
+(define LOF1 (list (make-file '0 0 empty)))
+(define LOF2 (list (make-file '0 0 empty) 
+                   (make-file '1 1 empty)))
+(define LOF3 (list (make-file '0 0 empty)
+                   (make-file '1 1 empty)
+                   (make-file '2 2 empty)))
+;; example file systems
+(define FS1 (make-dir '1 empty LOF1))
+(define FS2 (make-dir '2 (list FS1) LOF2))
+(define FS3 (make-dir '3 (list FS1 FS2) LOF3))
 
 ;; =============High Level Functions==============
+;;
 ;; apply-dir: (a-dir, (list[files] -> list[files]) -> a-dir)
 ;; Applies the given lof-fun to every single lof
 ;; throughout the entire file system
@@ -125,6 +126,7 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
   (make-dir (dir-name a-dir) 
             (apply-lod (dir-dirs a-dir) lof-fun) 
             (lof-fun (dir-files a-dir))))
+
 ;; apply-lod: (a-lod, (list[files]-> x) -> a-lod)
 ;; Applies the given lof-fun to every single lof
 ;; in every directory in the list, and within all
@@ -132,7 +134,10 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 (define (apply-lod a-lod lof-fun)
   (map (lambda (a-dir) (apply-dir a-dir lof-fun)) a-lod))
 ;; Test Cases:
-(check-expect (apply-dir NUMBERS (lambda (lof) (map (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f)))) lof))) NUMBERS-2)
+(define FILTERNUM (lambda (lof) (filter (lambda (f) (number? (file-content f))) lof)))
+(check-expect 
+ (apply-dir NUMBERS (lambda (lof) (map (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f)))) lof))) 
+ NUMBERS-2)
 (check-expect (apply-dir MIXED FILTERNUM) MIXED-2)
 ;; TODO check if you do nothing
 
@@ -157,20 +162,8 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 
 
 
-
-
-(define LOF1 (list (make-file '0 0 empty)))
-(define LOF2 (list (make-file '0 0 empty) 
-                   (make-file '1 1 empty)))
-(define LOF3 (list (make-file '0 0 empty)
-                   (make-file '1 1 empty)
-                   (make-file '2 2 empty)))
-;; example file systems
-(define FS1 (make-dir '1 empty LOF1))
-(define FS2 (make-dir '2 (list FS1) LOF2))
-(define FS3 (make-dir '3 (list FS1 FS2) LOF3))
-
-
+;; =============================================
+;; ================Functions====================
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; any-huge-files?: Dir num -> boolean
 ;; Returns true if any of the files within the entire directory
@@ -256,7 +249,9 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; find-file-path: FS symbol -> False OR list of symbol
 ;; takes in a file system and a file name, gives back the list of dir
-;; names to get to that file, or false if the given file can't be found
+;; names to get to that file (in order from root to the directory 
+;; containing the file--but not including the filename), 
+;; or false if the given file can't be found
 (define (find-file-path a-FS name)
   (local [(define LIST (find-path-helper a-FS name empty))]
     (cond [(empty? LIST) false]
@@ -279,7 +274,8 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
                               name
                               (append (list (dir-name a-FS)) a-LOS)))]))
 
-;;find-file-path-LOD : TODO
+;;find-file-path-LOD
+;; a helper function for find-path-helper.
 (define (find-file-path-LOD a-LOD name a-LOS)
   #| call find file path on each directory |#
          (local [(define LIST 
@@ -292,33 +288,31 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 (check-expect (find-file-path (make-dir 'name (list
                                                (make-dir 'name empty empty))
                                         empty)
-                              'rand)
-              
+                              'rand)       
               false)
 (check-expect (find-file-path (make-dir 'name (list
                                                (make-dir 'name empty empty))
                                         empty)
                               'rand)
-              
               false)
 
 (check-expect (find-file-path (make-dir 'name (list
                                                (make-dir 'name1 empty empty))
                                         (list (make-file 'target 1 1 )))
                               'target)
-              
               (list 'name))
 (check-expect (find-file-path (make-dir 'name (list
                                                (make-dir 'name1 empty
                                                          (list (make-file 'target 1 1 ))))
                                         empty)
                               'target)
-              
               (list 'name 'name1))
+(check-expect (find-file-path ROOT 'small2)
+              (list 'ROOT 'R3))
 
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
-;; file-names-satisfying: FS (file -> bool)-> List of symbol
+;; file-names-satisfying: Dir (file -> bool)-> List of symbol
 ;; gives list of file names, for which (file->bool) evaluates to true
 ;; for the given file. Returns files in inner directories first, left to right, 
 ;; then outermost files.
@@ -339,6 +333,8 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
 (check-expect (file-names-satisfying DIRZ IS-FIL2) (map (lambda (a-file) (file-name a-file))(list FIL2)))
 (check-expect (file-names-satisfying DIRZ (lambda (f) false)) empty)
 (check-expect (file-names-satisfying DIRZ (lambda (f) true)) (map (lambda (a-file) (file-name a-file))(list FIL FIL FIL FIL FIL2 FIL)))
+(check-expect (file-names-satisfying ROOT (lambda (f) (> 10 (file-size f))))
+              (list 'zero1 'small1 'small2 'zero1))
 
                                      
 ;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     
@@ -358,7 +354,8 @@ dir -> lod -> dir -> lod -> dir -> lod -> dir end -> lof -> lof -> lof
         [else (append (flatten-dir (first lod)) (flatten-lod (rest lod)))]))
 ;; Test Cases
 (check-expect (flatten-dir DIRZ) (list FIL FIL FIL FIL FIL2 FIL))
-;; TODO Test Cases
+(check-expect (flatten-dir ROOT) (list FLARGE2 FMED1 FMED1 FZERO  FSMALL1 FSMALL2 FLARGE1 FZERO))
+
 
 
 ;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

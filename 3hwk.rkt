@@ -1,6 +1,6 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")))))
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")) #f)))
 ;; Josh Desmond &
 ;; Saahil Claypool
 
@@ -296,43 +296,34 @@
 ;;(check-expect (clean-directory ROOT 'ROOT) ROOT-c-ar) (has subdirectories, so test fails).
 
 
+
+
+
+
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; find-file-path: FS symbol -> False OR list of symbol
 ;; takes in a file system and a file name, gives back the list of dir
 ;; names to get to that file (in order from root to the directory 
 ;; containing the file--but not including the filename), 
 ;; or false if the given file can't be found
+
 (define (find-file-path a-FS name)
-  (local [(define LIST (find-path-helper a-FS name empty))]
-    (cond [(empty? LIST) false]
-          [(cons? LIST) LIST])))
-
-;; find-path-helper: Dir, file, list of strings -> list of file names
-;;
-;; a helper function for find-file-path and find-path-helper
-(define (find-path-helper a-FS name a-LOS)      
-  (cond [(do-any-satisfy-condition? 
-          (dir-files a-FS) (lambda (a-file) (symbol=? (file-name a-file) name)))
-         (append a-LOS (list (dir-name a-FS)))]
-        ;; if no children -> branch is over
-        [(empty? (dir-dirs a-FS)) empty]
+  (cond [(do-any-satisfy-condition? (dir-files a-FS) (lambda (a-file) (symbol=? (file-name a-file) name)))
+         ;; this dir has file
+         (list (dir-name a-FS))]
         [else
-         #|call this function on all children directories|#
-         (append
-          a-LOS
-          (find-file-path-LOD (dir-dirs a-FS)
-                              name
-                              (append (list (dir-name a-FS)) a-LOS)))]))
+         (cond [(not (boolean? (find-file-path-help (dir-dirs a-FS) name)))
+                (append (list (dir-name a-FS)) (find-file-path-help (dir-dirs a-FS) name) )]
+               [else false])]))
+   
+(define (find-file-path-help a-LOD name)
+  (cond [(empty? a-LOD) false]
+        [else (cond
+              [(not (boolean? (find-file-path (first a-LOD) name)))
+                    (find-file-path (first a-LOD) name) ]
+              [else (find-file-path-help (rest a-LOD) name)])]))
 
-;;find-file-path-LOD
-;; a helper function for find-path-helper.
-(define (find-file-path-LOD a-LOD name a-LOS)
-  #| call find file path on each directory |#
-         (local [(define LIST 
-                   (filter (lambda (elt) (cons? elt))
-                           (map (lambda (a-dir) (find-path-helper a-dir name a-LOS)) a-LOD)))]
-           (cond [(empty? LIST) empty]
-                 [else (first LIST)])))
+
 ;; Test Cases:
 (check-expect (find-file-path (make-dir 'name empty empty) 'rand) false)
 (check-expect (find-file-path (make-dir 'name (list
@@ -357,6 +348,46 @@
                                         empty)
                               'target)
               (list 'name 'name1))
+
+(check-expect (find-file-path (make-dir 'top (list
+                                               (make-dir 'left empty
+                                                         (list (make-file 'empty 1 1 )))
+                                               (make-dir 'target empty
+                                                         (list (make-file 'target 1 1 )))
+                                               (make-dir 'right empty
+                                                         (list (make-file 'empty 1 1 ))))
+                                        empty)
+                              'target)
+              (list 'top 'target))
+(check-expect (find-file-path (make-dir 'top (list
+                                               (make-dir 'left empty
+                                                         (list (make-file 'empty 1 1 )))
+                                               (make-dir 'target empty
+                                                         (list (make-file 'empty 1 1 )
+                                                               (make-file 'target 1 1 )
+                                                               (make-file 'empty 1 1 )))
+                                               (make-dir 'right empty
+                                                         (list (make-file 'empty 1 1 ))))
+                                        empty)
+                              'target)
+              (list 'top 'target))
+(check-expect (find-file-path (make-dir 'top (list
+                                               (make-dir 'left empty
+                                                         (list (make-file 'empty 1 1 )))
+                                               (make-dir 'targettop (list (make-dir 'left empty
+                                                                                    (list (make-file 'empty 1 1 )))
+                                                                          (make-dir 'target empty
+                                                                                    (list (make-file 'target 1 1 )))
+                                                                          (make-dir 'right empty
+                                                                                    (list (make-file 'empty 1 1 ))))
+                                                         (list (make-file 'empty 1 1 )
+                                                               (make-file 'empty 1 1 )
+                                                               (make-file 'empty 1 1 )))
+                                               (make-dir 'right empty
+                                                         (list (make-file 'empty 1 1 ))))
+                                        empty)
+                              'target)
+              (list 'top 'targettop 'target))
 
 (define TARG (make-dir 'targ (list R1) (list FMED1 (make-file 'target 1 1)  FLARGE2)))
 (define FFPDIR (make-dir 'top

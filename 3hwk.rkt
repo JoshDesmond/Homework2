@@ -145,7 +145,9 @@
 ;; Test Cases:
 (define FILTERNUM (lambda (lof) (filter (lambda (f) (number? (file-content f))) lof)))
 (check-expect 
- (apply-dir NUMBERS (lambda (lof) (map (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f)))) lof))) 
+ (apply-dir NUMBERS (lambda (lof) (map (lambda (f) (make-file (file-name f) 
+                                                              (file-size f) 
+                                                              (+ 1 (file-content f)))) lof))) 
  NUMBERS-2)
 (check-expect (apply-dir MIXED FILTERNUM) MIXED-2)
 (check-expect (apply-dir ROOT (lambda (f) f)) ROOT)
@@ -161,7 +163,11 @@
 ;; Test Cases
 (define FIL (make-file 'name 5 'cont))
 (define FIL2 (make-file 'name 6 'conte))
-(define DIRZ (make-dir 'name3 (list (make-dir 'name empty (list FIL FIL FIL)) (make-dir 'name2 empty (list FIL))) (list FIL2 FIL)))
+(define DIRZ 
+  (make-dir 'name3 (list (make-dir 'name empty 
+                                   (list FIL FIL FIL)) 
+                         (make-dir 'name2 empty (list FIL))) 
+            (list FIL2 FIL)))
 (define IS-FIL (lambda (f) (and (equal? (file-name f) 'name) 
                                  (= 5 (file-size f))
                                  (equal? (file-content f) 'cont))))
@@ -186,12 +192,15 @@
 (define (map-dir a-dir file-fun)
   (apply-dir a-dir (lambda (lof) (map file-fun lof))))
 ;; Test Cases
-(check-expect (map-dir NUMBERS (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f))))) NUMBERS-2)
-(check-expect (map-dir FS3 (lambda (f) true))
-              (make-dir '3 (list (make-dir '1 empty (list true)) 
-                                 (make-dir '2 (list (make-dir '1 empty (list true))) 
-                                           (list true true))) 
-                        (list true true true)))
+(check-expect 
+ (map-dir NUMBERS (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f))))) 
+ NUMBERS-2)
+(check-expect 
+ (map-dir FS3 (lambda (f) true))   
+ (make-dir '3 (list (make-dir '1 empty (list true)) 
+                    (make-dir '2 (list (make-dir '1 empty (list true))) 
+                              (list true true))) 
+           (list true true true)))
 
 
 ;; =============================================
@@ -253,7 +262,8 @@
 (define (clean-directory a-dir name)
   (cond [(symbol=? (dir-name a-dir) name) #| clean this |#
          (filter-dir a-dir (lambda (f) (not (equal? (file-size f) 0))))]
-        [else ;; we want to map the dirs, each dir gets clean directory applied to it, givng back a clean directory
+        [else ;; we want to map the dirs, each dir gets clean directory 
+         ;; applied to it, givng back a clean directory
          (make-dir
                (dir-name a-dir)
                (map (lambda (a-dir) (clean-directory a-dir name))
@@ -373,10 +383,14 @@
   (map (lambda (a-file) (file-name a-file)) ;; Maps each file -> its name 
        (flatten-dir (filter-dir adir fcond)))) ;; Of the list of filtered files.
 ;; Test Cases
-(check-expect (file-names-satisfying DIRZ IS-FIL) (map (lambda (a-file) (file-name a-file)) (list FIL FIL FIL FIL FIL)))
-(check-expect (file-names-satisfying DIRZ IS-FIL2) (map (lambda (a-file) (file-name a-file))(list FIL2)))
+(check-expect (file-names-satisfying DIRZ IS-FIL) 
+              (map (lambda (a-file) (file-name a-file)) (list FIL FIL FIL FIL FIL)))
+(check-expect (file-names-satisfying DIRZ IS-FIL2) 
+              (map (lambda (a-file) (file-name a-file))(list FIL2)))
 (check-expect (file-names-satisfying DIRZ (lambda (f) false)) empty)
-(check-expect (file-names-satisfying DIRZ (lambda (f) true)) (map (lambda (a-file) (file-name a-file))(list FIL FIL FIL FIL FIL2 FIL)))
+(check-expect (file-names-satisfying DIRZ (lambda (f) true)) 
+              (map (lambda (a-file) (file-name a-file))
+                   (list FIL FIL FIL FIL FIL2 FIL)))
 (check-expect (file-names-satisfying ROOT (lambda (f) (> 10 (file-size f))))
               (list 'zero1 'small1 'small2 'zero1))
 

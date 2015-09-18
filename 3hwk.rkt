@@ -127,7 +127,7 @@
 (define FS3 (make-dir '3 (list FS1 FS2) LOF3))
 
 ;; =============High Level Functions==============
-;;
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; apply-dir: (a-dir, (list[files] -> list[files]) -> a-dir)
 ;; Applies the given lof-fun to every single lof
 ;; throughout the entire file system
@@ -150,15 +150,35 @@
 (check-expect (apply-dir MIXED FILTERNUM) MIXED-2)
 (check-expect (apply-dir ROOT (lambda (f) f)) ROOT)
 
+
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; filter-dir: (a-dir, (file->boolean) -> a-dir)
 ;; Returns a directory with all files removed
 ;; or filtered out that cause the boolean test to
 ;; return false.
 (define (filter-dir a-dir file-cond)
   (apply-dir a-dir (lambda (lof) (filter file-cond lof))))
+;; Test Cases
+(define FIL (make-file 'name 5 'cont))
+(define FIL2 (make-file 'name 6 'conte))
+(define DIRZ (make-dir 'name3 (list (make-dir 'name empty (list FIL FIL FIL)) (make-dir 'name2 empty (list FIL))) (list FIL2 FIL)))
+(define IS-FIL (lambda (f) (and (equal? (file-name f) 'name) 
+                                 (= 5 (file-size f))
+                                 (equal? (file-content f) 'cont))))
+(define IS-FIL2 (lambda (f) (and (equal? (file-name f) 'name) 
+                                 (= 6 (file-size f))
+                                 (equal? (file-content f) 'conte))))
 (check-expect (filter-dir MIXED (lambda (f) (number? (file-content f)))) MIXED-2)
-;; TODO Test Case
+(check-expect (filter-dir DIRZ IS-FIL) (make-dir 'name3 (list (make-dir 'name empty (list FIL FIL FIL))
+                                                             (make-dir 'name2 empty (list FIL))) 
+                                                (list FIL)))
+(check-expect (filter-dir DIRZ IS-FIL2) (make-dir 'name3 (list (make-dir 'name empty empty)
+                                                               (make-dir 'name2 empty empty)) 
+                                                  (list FIL2 )))
 
+
+
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; map-dir (a-dir, (file->file) -> a-dir)
 ;; Returns a directory with the given function
 ;; applied to every single file in the entire
@@ -167,8 +187,11 @@
   (apply-dir a-dir (lambda (lof) (map file-fun lof))))
 ;; Test Cases
 (check-expect (map-dir NUMBERS (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f))))) NUMBERS-2)
-;; TODO Test Case
-
+(check-expect (map-dir FS3 (lambda (f) true))
+              (make-dir '3 (list (make-dir '1 empty (list true)) 
+                                 (make-dir '2 (list (make-dir '1 empty (list true))) 
+                                           (list true true))) 
+                        (list true true true)))
 
 
 ;; =============================================
@@ -332,7 +355,6 @@
 (define FFPDIR2 (make-dir 'top
                          (list R1 R2 (make-dir 't2 (list TARG) empty) R3)
                          (list FMED1 FLARGE1)))
-#|
 (check-expect (find-file-path FFPDIR 'target)
               (list 'top 'targ))
 (check-expect (find-file-path FFPDIR2 'target)
@@ -340,7 +362,7 @@
 (check-expect (find-file-path ROOT 'small2)
               (list 'ROOT 'R3))
 (check-expect (find-file-path ROOT 'flarge1) (list 'ROOT))
-|#
+
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 ;; file-names-satisfying: Dir (file -> bool)-> List of symbol
@@ -351,15 +373,6 @@
   (map (lambda (a-file) (file-name a-file)) ;; Maps each file -> its name 
        (flatten-dir (filter-dir adir fcond)))) ;; Of the list of filtered files.
 ;; Test Cases
-(define FIL (make-file 'name 5 'cont))
-(define FIL2 (make-file 'name 6 'conte))
-(define DIRZ (make-dir 'name3 (list (make-dir 'name empty (list FIL FIL FIL)) (make-dir 'name2 empty (list FIL))) (list FIL2 FIL)))
-(define IS-FIL (lambda (f) (and (equal? (file-name f) 'name) 
-                                 (= 5 (file-size f))
-                                 (equal? (file-content f) 'cont))))
-(define IS-FIL2 (lambda (f) (and (equal? (file-name f) 'name) 
-                                 (= 6 (file-size f))
-                                 (equal? (file-content f) 'conte))))
 (check-expect (file-names-satisfying DIRZ IS-FIL) (map (lambda (a-file) (file-name a-file)) (list FIL FIL FIL FIL FIL)))
 (check-expect (file-names-satisfying DIRZ IS-FIL2) (map (lambda (a-file) (file-name a-file))(list FIL2)))
 (check-expect (file-names-satisfying DIRZ (lambda (f) false)) empty)

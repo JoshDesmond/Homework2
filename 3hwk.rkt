@@ -1,6 +1,6 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")))))
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 3hwk) (read-case-sensitive #t) (teachpacks ((lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp") (lib "universe.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp") (lib "universe.rkt" "teachpack" "2htdp")))))
 ;; Josh Desmond &
 ;; Saahil Claypool
 
@@ -33,6 +33,12 @@
 ;;list-of-files is either
 ;; empty
 ;; (cons s lof) s is file, lof is a list of files
+#|
+(define (lofFun lof)
+  (cond [(empty? lof) ...]
+        [else ... (fileFun (first lof))
+                  (lofFun (rest lof)) ...]))
+|#
 
 
 ;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,6 +93,15 @@
 (define LOD-ROOT (list R1 R2 R3))
 (define ROOT (make-dir 'ROOT LOD-ROOT LOF-ROOT))
 
+;; (cleaned)
+(define LOF-ROOT-c (list FLARGE1))
+(define LOF-R2-1-c (list FMED1))
+(define R2-1-c (make-dir 'R2-1 empty LOF-R2-1-c))
+(define LOD-R2-c (list R2-1-c))
+(define R2-c (make-dir 'R2 LOD-R2-c LOF-R2))
+(define LOD-ROOT-c (list R1 R2-c R3))
+(define ROOT-c-ar (make-dir 'ROOT LOD-ROOT LOF-ROOT-c))
+(define ROOT-c-ar2 (make-dir 'ROOT LOD-ROOT-c LOF-ROOT))
 
 ;; Example Two
 ;; Files
@@ -118,7 +133,7 @@
 (define FS3 (make-dir '3 (list FS1 FS2) LOF3))
 
 ;; =============High Level Functions==============
-;;
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; apply-dir: (a-dir, (list[files] -> list[files]) -> a-dir)
 ;; Applies the given lof-fun to every single lof
 ;; throughout the entire file system
@@ -136,20 +151,46 @@
 ;; Test Cases:
 (define FILTERNUM (lambda (lof) (filter (lambda (f) (number? (file-content f))) lof)))
 (check-expect 
- (apply-dir NUMBERS (lambda (lof) (map (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f)))) lof))) 
+ (apply-dir NUMBERS (lambda (lof) (map (lambda (f) (make-file (file-name f) 
+                                                              (file-size f) 
+                                                              (+ 1 (file-content f)))) lof))) 
  NUMBERS-2)
 (check-expect (apply-dir MIXED FILTERNUM) MIXED-2)
-;; TODO check if you do nothing
+(check-expect (apply-dir ROOT (lambda (f) f)) ROOT)
 
+
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; filter-dir: (a-dir, (file->boolean) -> a-dir)
 ;; Returns a directory with all files removed
 ;; or filtered out that cause the boolean test to
 ;; return false.
 (define (filter-dir a-dir file-cond)
   (apply-dir a-dir (lambda (lof) (filter file-cond lof))))
+;; Test Cases
+(define FIL (make-file 'name 5 'cont))
+(define FIL2 (make-file 'name 6 'conte))
+(define DIRZ 
+  (make-dir 'name3 (list (make-dir 'name empty 
+                                   (list FIL FIL FIL)) 
+                         (make-dir 'name2 empty (list FIL))) 
+            (list FIL2 FIL)))
+(define IS-FIL (lambda (f) (and (equal? (file-name f) 'name) 
+                                 (= 5 (file-size f))
+                                 (equal? (file-content f) 'cont))))
+(define IS-FIL2 (lambda (f) (and (equal? (file-name f) 'name) 
+                                 (= 6 (file-size f))
+                                 (equal? (file-content f) 'conte))))
 (check-expect (filter-dir MIXED (lambda (f) (number? (file-content f)))) MIXED-2)
-;; TODO Test Case
+(check-expect (filter-dir DIRZ IS-FIL) (make-dir 'name3 (list (make-dir 'name empty (list FIL FIL FIL))
+                                                             (make-dir 'name2 empty (list FIL))) 
+                                                (list FIL)))
+(check-expect (filter-dir DIRZ IS-FIL2) (make-dir 'name3 (list (make-dir 'name empty empty)
+                                                               (make-dir 'name2 empty empty)) 
+                                                  (list FIL2 )))
 
+
+
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; map-dir (a-dir, (file->file) -> a-dir)
 ;; Returns a directory with the given function
 ;; applied to every single file in the entire
@@ -157,9 +198,15 @@
 (define (map-dir a-dir file-fun)
   (apply-dir a-dir (lambda (lof) (map file-fun lof))))
 ;; Test Cases
-(check-expect (map-dir NUMBERS (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f))))) NUMBERS-2)
-;; TODO Test Case
-
+(check-expect 
+ (map-dir NUMBERS (lambda (f) (make-file (file-name f) (file-size f) (+ 1 (file-content f))))) 
+ NUMBERS-2)
+(check-expect 
+ (map-dir FS3 (lambda (f) true))   
+ (make-dir '3 (list (make-dir '1 empty (list true)) 
+                    (make-dir '2 (list (make-dir '1 empty (list true))) 
+                              (list true true))) 
+           (list true true true)))
 
 
 ;; =============================================
@@ -179,6 +226,7 @@
 (check-expect (any-huge-files? FS1 5) false)
 (check-expect (any-huge-files? FS3 100) false)
 (check-expect (any-huge-files? FS3 1) true)
+(check-expect (any-huge-files? ROOT 90) true)
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; count-files: dir -> num
@@ -195,6 +243,7 @@
 (check-expect (count-files FS1) 1)
 (check-expect (count-files FS2) 3)
 (check-expect (count-files FS3) 7)
+(check-expect (count-files ROOT) 8)
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; do-any-satisfy-condition? list[alpha] (alpha -> bool) -> bool
@@ -206,6 +255,11 @@
        fun list)
       )
      0))
+;; Test Cases
+(check-expect (do-any-satisfy-condition? (list empty) (lambda (f) (file? f))) false)
+(check-expect (do-any-satisfy-condition? LOF3 (lambda (f) (= 2 (file-size f)))) true)
+(check-expect (do-any-satisfy-condition? LOF3 (lambda (f) (< 3 (file-size f)))) false)
+(check-expect (do-any-satisfy-condition? LOF-ROOT (lambda (f) (file? f))) true)
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;; clean-directory: dir symbol -> dir
@@ -214,13 +268,13 @@
 (define (clean-directory a-dir name)
   (cond [(symbol=? (dir-name a-dir) name) #| clean this |#
          (filter-dir a-dir (lambda (f) (not (equal? (file-size f) 0))))]
-        [else ;; we want to map the dirs, each dir gets clean directory applied to it, givng back a clean directory
+        [else ;; we want to map the dirs, each dir gets clean directory 
+         ;; applied to it, givng back a clean directory
          (make-dir
                (dir-name a-dir)
                (map (lambda (a-dir) (clean-directory a-dir name))
                     (dir-dirs a-dir))
                (dir-files a-dir))]))
-
 ;; Test cases
 (check-expect (clean-directory (make-dir 'test empty
                                          (list (make-file '0 0 empty)))
@@ -244,6 +298,12 @@
                                               empty
                                               empty))
                         empty))
+(check-expect (clean-directory ROOT 'R2-1) ROOT-c-ar2)
+;;(check-expect (clean-directory ROOT 'ROOT) ROOT-c-ar) (has subdirectories, so test fails).
+
+
+
+
 
 
 ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -252,37 +312,24 @@
 ;; names to get to that file (in order from root to the directory 
 ;; containing the file--but not including the filename), 
 ;; or false if the given file can't be found
+
 (define (find-file-path a-FS name)
-  (local [(define LIST (find-path-helper a-FS name empty))]
-    (cond [(empty? LIST) false]
-          [(cons? LIST) LIST])))
-
-;; find-path-helper: Dir, file, list of strings -> list of file names
-;;
-;; a helper function for find-file-path and find-path-helper
-(define (find-path-helper a-FS name a-LOS)      
-  (cond [(do-any-satisfy-condition? 
-          (dir-files a-FS) (lambda (a-file) (symbol=? (file-name a-file) name)))
-         (append a-LOS (list (dir-name a-FS)))]
-        ;; if no children -> branch is over
-        [(empty? (dir-dirs a-FS)) empty]
+  (cond [(do-any-satisfy-condition? (dir-files a-FS) (lambda (a-file) (symbol=? (file-name a-file) name)))
+         ;; this dir has file
+         (list (dir-name a-FS))]
         [else
-         #|call this function on all children directories|#
-         (append
-          a-LOS
-          (find-file-path-LOD (dir-dirs a-FS)
-                              name
-                              (append (list (dir-name a-FS)) a-LOS)))]))
+         (cond [(not (boolean? (find-file-path-help (dir-dirs a-FS) name)))
+                (append (list (dir-name a-FS)) (find-file-path-help (dir-dirs a-FS) name) )]
+               [else false])]))
+   
+(define (find-file-path-help a-LOD name)
+  (cond [(empty? a-LOD) false]
+        [else (cond
+              [(not (boolean? (find-file-path (first a-LOD) name)))
+                    (find-file-path (first a-LOD) name) ]
+              [else (find-file-path-help (rest a-LOD) name)])]))
 
-;;find-file-path-LOD
-;; a helper function for find-path-helper.
-(define (find-file-path-LOD a-LOD name a-LOS)
-  #| call find file path on each directory |#
-         (local [(define LIST 
-                   (filter (lambda (elt) (cons? elt))
-                           (map (lambda (a-dir) (find-path-helper a-dir name a-LOS)) a-LOD)))]
-           (cond [(empty? LIST) empty]
-                 [else (first LIST)])))
+
 ;; Test Cases:
 (check-expect (find-file-path (make-dir 'name empty empty) 'rand) false)
 (check-expect (find-file-path (make-dir 'name (list
@@ -307,6 +354,46 @@
                                         empty)
                               'target)
               (list 'name 'name1))
+
+(check-expect (find-file-path (make-dir 'top (list
+                                               (make-dir 'left empty
+                                                         (list (make-file 'empty 1 1 )))
+                                               (make-dir 'target empty
+                                                         (list (make-file 'target 1 1 )))
+                                               (make-dir 'right empty
+                                                         (list (make-file 'empty 1 1 ))))
+                                        empty)
+                              'target)
+              (list 'top 'target))
+(check-expect (find-file-path (make-dir 'top (list
+                                               (make-dir 'left empty
+                                                         (list (make-file 'empty 1 1 )))
+                                               (make-dir 'target empty
+                                                         (list (make-file 'empty 1 1 )
+                                                               (make-file 'target 1 1 )
+                                                               (make-file 'empty 1 1 )))
+                                               (make-dir 'right empty
+                                                         (list (make-file 'empty 1 1 ))))
+                                        empty)
+                              'target)
+              (list 'top 'target))
+(check-expect (find-file-path (make-dir 'top (list
+                                               (make-dir 'left empty
+                                                         (list (make-file 'empty 1 1 )))
+                                               (make-dir 'targettop (list (make-dir 'left empty
+                                                                                    (list (make-file 'empty 1 1 )))
+                                                                          (make-dir 'target empty
+                                                                                    (list (make-file 'target 1 1 )))
+                                                                          (make-dir 'right empty
+                                                                                    (list (make-file 'empty 1 1 ))))
+                                                         (list (make-file 'empty 1 1 )
+                                                               (make-file 'empty 1 1 )
+                                                               (make-file 'empty 1 1 )))
+                                               (make-dir 'right empty
+                                                         (list (make-file 'empty 1 1 ))))
+                                        empty)
+                              'target)
+              (list 'top 'targettop 'target))
 
 (define TARG (make-dir 'targ (list R1) (list FMED1 (make-file 'target 1 1)  FLARGE2)))
 (define FFPDIR (make-dir 'top
@@ -333,19 +420,14 @@
   (map (lambda (a-file) (file-name a-file)) ;; Maps each file -> its name 
        (flatten-dir (filter-dir adir fcond)))) ;; Of the list of filtered files.
 ;; Test Cases
-(define FIL (make-file 'name 5 'cont))
-(define FIL2 (make-file 'name 6 'conte))
-(define DIRZ (make-dir 'name3 (list (make-dir 'name empty (list FIL FIL FIL)) (make-dir 'name2 empty (list FIL))) (list FIL2 FIL)))
-(define IS-FIL (lambda (f) (and (equal? (file-name f) 'name) 
-                                 (= 5 (file-size f))
-                                 (equal? (file-content f) 'cont))))
-(define IS-FIL2 (lambda (f) (and (equal? (file-name f) 'name) 
-                                 (= 6 (file-size f))
-                                 (equal? (file-content f) 'conte))))
-(check-expect (file-names-satisfying DIRZ IS-FIL) (map (lambda (a-file) (file-name a-file)) (list FIL FIL FIL FIL FIL)))
-(check-expect (file-names-satisfying DIRZ IS-FIL2) (map (lambda (a-file) (file-name a-file))(list FIL2)))
+(check-expect (file-names-satisfying DIRZ IS-FIL) 
+              (map (lambda (a-file) (file-name a-file)) (list FIL FIL FIL FIL FIL)))
+(check-expect (file-names-satisfying DIRZ IS-FIL2) 
+              (map (lambda (a-file) (file-name a-file))(list FIL2)))
 (check-expect (file-names-satisfying DIRZ (lambda (f) false)) empty)
-(check-expect (file-names-satisfying DIRZ (lambda (f) true)) (map (lambda (a-file) (file-name a-file))(list FIL FIL FIL FIL FIL2 FIL)))
+(check-expect (file-names-satisfying DIRZ (lambda (f) true)) 
+              (map (lambda (a-file) (file-name a-file))
+                   (list FIL FIL FIL FIL FIL2 FIL)))
 (check-expect (file-names-satisfying ROOT (lambda (f) (> 10 (file-size f))))
               (list 'zero1 'small1 'small2 'zero1))
 

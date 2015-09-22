@@ -11,17 +11,26 @@
 ;; - (make hintquestion question hint-string) 
 ;; - (make testcond (??? -> boolean) list[cmd] list[cmd])
 ;; - (make displayprogress type)
+;; - (make displaymessage string)
 (define-struct askquestion (question))
 (define-struct hintquestion (question hint-string))
 (define-struct testcond (cond passed-cond failed-cond))
 (define-struct displayprogress (type))
+(define-struct displaymessage (string))
 
-;; a question is either 
-;; (make-fill string string symbol), or
-;; (make-mult string string (list strings) symbol)
-(define-struct fill (problem answer type))
+;; a question is either
+;; a fill, or
+;; a mult
+
+;; a mult is a (make-mult string string (list strings) symbol) TODO Check formatting
 (define-struct mult (problem answer choicelist type))
 
+;; a fill is either
+;; - (make-fill string string symbol), or
+;; - (make-fill string (list string) symbol)
+;; that is, answers can either be a list of strings
+;; or a single string.
+(define-struct fill (problem answers type))
 
 
 #|
@@ -34,22 +43,39 @@
 |#
 
 (define test1
-  (let )
+  (let ([q1
+         (make-fill "What is 3*4+2?" "14" 'arithmetic)]
+        [q2
+         (make-fill "What is 2+3*4?" "14" 'arithmetic)]
+        [q3
+         (make-fill "What is 5+2*6?" "17" 'arithmetic)]
+        [qbad4
+         (make-fill "What is 3+5*2?" "13" 'arithmetic)]
+        [m5
+         (make-mult "What is the reduced form of 12/18?" "2/3" 
+                    (list "6/9" "1/1.5" "2/3") 'fractions)]
+        [qbad6
+         (make-fill "What is 8+3*2" "14" 'arithmetic)]
+        [qwell6
+         (make-mult "What is 1/4 + 1/2?" "3/4" 
+                    (list "3/4" "1/6" "2/6") 'fractions)]))
   (make-test
    (list (make-askquestion q1)
          (make-askquestion q2)
          (make-askquestion q3)
-         (make-testcond ({do you have less than 50% so far?})
-                        (list qf4) ;;true
+         (make-testcond ({do you have less than 50% so far?}) ;;TODO
+                        (list ;;true
+                         (make-displaymessage "You seem to be having trouble with these. Try again.")
+                         (make-askquestion qbad4)) 
                         (list empty)) ;;false
          (make-askquestion m5)
-         (make-testcond ({do you have less than 50% on arithmetic?})
-                        (list qf6) ;;true
-                        (list qt6)) ;;false
+         (make-testcond ({do you have less than or equal to 50% on arithmetic?})
+                        (list (make-askquestion qbad6)) ;;true
+                        (list (make-askquestion qwell6))) ;;false
          (make-displayprogress 'arithmetic)
          (make-displayprogress 'fractions))
    ))
-   
+
    
    
    

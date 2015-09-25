@@ -27,7 +27,7 @@
 ;; a fill, or
 ;; a mult
 
-;; a mult is a (make-mult string string (list strings) symbol) TODO Check formatting
+;; a mult is a (make-mult string string list[string] symbol) 
 (define-struct mult (problem answers choicelist type))
 
 ;; a fill is either
@@ -61,7 +61,7 @@
          (make-askquestion q2)
          (make-askquestion q3)
          (make-testcond (lambda (number) (< number .5))
-                        'arithmetic ;;TODO
+                        'arithmetic 
                         (list ;;true
                          (make-displaymessage "You seem to be having trouble with these. Try again.")
                          (make-askquestion qbad4)) 

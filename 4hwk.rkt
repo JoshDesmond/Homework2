@@ -3,6 +3,7 @@
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname 4hwk) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 ;; Josh Desmond Saahil
 
+;;TODO: add a way to keep track of variables (pass list of symbol) (defualt always keeps track of total)
 ;; A test is (make-test list[cmd])
 (define-struct test (cmds))
 

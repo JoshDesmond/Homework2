@@ -1,21 +1,24 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-advanced-reader.ss" "lang")((modname 4hwk) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname 4hwk) (read-case-sensitive #t) (teachpacks ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #t #t none #f ((lib "universe.rkt" "teachpack" "2htdp") (lib "image.rkt" "teachpack" "2htdp") (lib "batch-io.rkt" "teachpack" "2htdp")))))
 ;; Josh Desmond Saahil
 
-;;TODO: add a way to keep track of variables (pass list of symbol) (defualt always keeps track of total)
-;; A test is (make-test list[cmd])
-(define-struct test (cmds))
+;; A test is (make-test list[symbol] list[cmd])
+;; a test will keep track of progress on all question types which match the given symbol
+;; by default, tests will keep track of your total progress.
+(define-struct test (types cmds))
 
 ;; A cmd is either
 ;; - (make askquestion question)
 ;; - (make hintquestion question hint-string) 
-;; - (make testcond (??? -> boolean) list[cmd] list[cmd])
+;; - (make testcond (number -> boolean) symbol list[cmd] list[cmd])
+;;         testcond will evaluate the lambda function using the percentage-correct,
+;;         of the category specified.
 ;; - (make displayprogress type)
 ;; - (make displaymessage string)
 (define-struct askquestion (question))
 (define-struct hintquestion (question hint-string))
-(define-struct testcond (cond passed-cond failed-cond))
+(define-struct testcond (cond type passed-cond failed-cond))
 (define-struct displayprogress (type))
 (define-struct displaymessage (string))
 
@@ -33,13 +36,6 @@
 ;; that is, answers can either be a list of strings
 ;; or a single string.
 (define-struct fill (problem answer type))
-
-
-;; getProgress: symbol -> number
-;; takes in type of question, gives back % of those correct
-;; 'all will give back total % correct
-(define (getProgress category)
-  0)
 
 
 (define test1
@@ -60,16 +56,19 @@
          (make-mult "What is 1/4 + 1/2?" "3/4" 
                     (list "3/4" "1/6" "2/6") 'fractions)])
   (make-test
+   (list 'arithmetic 'fractions)
    (list (make-askquestion q1)
          (make-askquestion q2)
          (make-askquestion q3)
-         (make-testcond (lambda () (< (getProgress 'arithmatic) .5)) ;;TODO
+         (make-testcond (lambda (number) (< number .5))
+                        'arithmetic ;;TODO
                         (list ;;true
                          (make-displaymessage "You seem to be having trouble with these. Try again.")
                          (make-askquestion qbad4)) 
                         (list empty)) ;;false
          (make-askquestion m5)
-         (make-testcond (lambda () (< (getProgress 'arithmatic) .5))
+         (make-testcond (lambda (number) (< number .5))
+                        'arithmetic
                         (list (make-askquestion qbad6)) ;;true
                         (list (make-askquestion qwell6))) ;;false
          (make-displayprogress 'arithmetic)
@@ -97,6 +96,7 @@
                           "practice")
                     'general)])
     (make-test
+     (list 'personalities)
      (list (make-askquestion q1)
            (make-displaymessage st1)
            (make-hintquestion h2
@@ -104,7 +104,7 @@
            (make-askquestion m3)
            (make-displayprogress 'personalities)
            (make-askquestion f4)
-           (make-displayprogress 'all)
+           (make-displayprogress 'all) ;; 'all is a special symbol, that represents printing your total percentage correct.
            (make-displaymessage "There's more WPI history on the web.  And life.")))))
         
 

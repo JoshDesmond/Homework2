@@ -1,0 +1,64 @@
+Saahil Claypool & Josh Desmond
+
+
+Identify three features of Lisp that Graham believes gave his company a competitive advantage. At least two should be technical (rather than social). Describe each feature and explain how it provided an advantage.
+
+1.) Macros TODO
+2.) "Lisp code is made out of Lisp data objects." This syntatical feature of the language is important, because it closely aligns lisp code to the structure of a parse tree. And because of that, you can programatically modify your source code; or rather, in his words, write "programs that write programs" using macros.
+3.) Competitors don't understand Lisp. TODO
+
+Graham's article makes several observations about programming and programming languages. Identify and restate in your own words, the two observations that you find most significant. Explain (in a couple of sentences each) why you find each of your chosen observations significant.
+
+1.) Programming languages have different levels of power. TODO
+2.) Programming languages (the use of) changes slowly, because TODO
+
+In another interesting article, Graham shares his early critique of Java. It turns out that Graham was somewhat wrong in predicting the future of Java, but his analysis of the non-technical aspects of a programming language is applicable to any new language that comes on the scene. Read the article and in your own words, state three questions that Graham's article teaches you to ask when approaching a new language.
+
+1.) (referencing point #2) Is the language designed for other people, or is it a language that is designed for the creators' use?
+2.) (referencing point #7) Is the language too controlling, taking away freedom from the programmer at the expense of language's power.
+3.) Does the language have a passionate community behind it?
+
+Languages are everywhere once you get used to looking for them. In general, a language is the repository of knowledge and goals that emerge from a domain of human activity. Computer science is replete with such examples (optimization problems led to OPL, database query optimization gave rise to SQL, scripting needs brought forth Awk and Perl, and so on). But humans have done this for much longer than computers have been around.
+
+Identify a non computer-science "language" used for some activity by some subset of humans.
+
+A tournament bracket for sports. This can be a elimination bracket, one with round robins, or seeding. TODO
+
+Explain the community of people and what they share.
+
+The community of language users is tournament organizers, and they all share the goal of hosting tournaments for some sort of competitive sport or game.
+
+Now, evaluate this language as you would a programming language by answering the following questions:
+What are programs in this language?
+
+Programs are tournament brackets with an assoociate set of rules, such as definitions for how many games are played between teams, whether a tournament is double elimination, and whether teams are seeded or not.
+
+What are the data, the operations and the control? (make sure your chosen language has all of these characteristics --- if not, pick something else!)
+
+The data includes teams, matches, and additional (optional) rules.
+The operations include executing matches/playing games, and assigning teams to seeded positions in the bracket.
+Control in the language involves creating a bracket tree depending on the outcome of games. That is, the bracket proceeds differently depending on the result of each match.
+Control can also be specified in a tournaments via additional rules, this could include  TODO
+
+Briefly describe the language's syntax; use examples if you wish.
+
+To represent the execution of a tournament bracket, people often use the branching tree diagram showing the progress of matches towards the finals. This diagram shows which two teams play at which stages of the tournament, and shows which teams win each match (often showing their "score" as well).
+
+The execution statements are specifying matches to be played, and building the tournament tree after games are played.
+
+An example in English is:
+
+WPI plays MIT in a best of three in the semi-finals. The winner of the match moves onto the finals, playing another best of the three. The loser of the match plays in the third place game.
+
+What "data values" do programs in this language evaluate to?
+
+The program itself evaluates to a list of teams ranked by how well they did, or
+to a tree structure showing the progress/execution of a tournment.
+
+What is the corresponding notion of an interpreter for your language?
+
+A sample interpreter of the language is a tournament organizer, who tells people when their matches have to played, and produce the written results of a tournament
+
+Comment on whether or not this language might be amenable to computer processing (you do not need to choose a language that can be machine-processed).
+
+Yes. Software exists to specify tournaments with any given number of players. 

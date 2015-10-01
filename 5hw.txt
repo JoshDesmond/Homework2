@@ -22,27 +22,28 @@ Languages are everywhere once you get used to looking for them. In general, a la
 
 Identify a non computer-science "language" used for some activity by some subset of humans.
 
-A tournament bracket for sports. This can be a elimination bracket, one with round robins, or seeding. TODO
+A tournament bracket for sports. This can range from simple single elimation tournaments to seeded multiple elimination tournaments.
 
 Explain the community of people and what they share.
 
-The community of language users is tournament organizers, and they all share the goal of hosting tournaments for some sort of competitive sport or game.
+The community that uses tournament brackets are sports fans and officials. This group is intersted in knowing both the structure of how future games should be played and the past results of the games.
 
 Now, evaluate this language as you would a programming language by answering the following questions:
 What are programs in this language?
 
-Programs are tournament brackets with an assoociate set of rules, such as definitions for how many games are played between teams, whether a tournament is double elimination, and whether teams are seeded or not.
+'Programs' would consist of a list of teams that are in the tournament as well as an additional set of rules, such as how teams are seeded and or eliminated. 
 
 What are the data, the operations and the control? (make sure your chosen language has all of these characteristics --- if not, pick something else!)
 
-The data includes teams, matches, and additional (optional) rules.
-The operations include executing matches/playing games, and assigning teams to seeded positions in the bracket.
-Control in the language involves creating a bracket tree depending on the outcome of games. That is, the bracket proceeds differently depending on the result of each match.
-Control can also be specified in a tournaments via additional rules, this could include  TODO
+The data includes teams, matches, and additional (optional) rules. The Bracket structure is set up much like a tree: each match in a brakcet is between the winners of two other matches. This creates a tree-like structure.
+The operations include executing matches/playing games, and assigning teams to seeded positions in the bracket. 
+Control in this language would take the form in different branches to the team depending on which team wins each game. 
 
 Briefly describe the language's syntax; use examples if you wish.
 
-To represent the execution of a tournament bracket, people often use the branching tree diagram showing the progress of matches towards the finals. This diagram shows which two teams play at which stages of the tournament, and shows which teams win each match (often showing their "score" as well).
+To represent the execution of a tournament bracket, people often use the branching tree diagram showing the progress of matches towards the finals. 
+This diagram shows which two teams play at which stages of the tournament, and shows which teams win each match (often showing their "score" as well).
+This common convention serves as the syntax for creating visual trees. 
 
 The execution statements are specifying matches to be played, and building the tournament tree after games are played.
 
@@ -52,13 +53,14 @@ WPI plays MIT in a best of three in the semi-finals. The winner of the match mov
 
 What "data values" do programs in this language evaluate to?
 
-The program itself evaluates to a list of teams ranked by how well they did, or
-to a tree structure showing the progress/execution of a tournment.
+The programs would evaluate to a list of teams by ranking.
 
 What is the corresponding notion of an interpreter for your language?
 
-A sample interpreter of the language is a tournament organizer, who tells people when their matches have to played, and produce the written results of a tournament
+A sameple interpreter would be an avid basketball fan. A fan who is trying to determine just how good his team did will interpret a bracket to see how far his team made it in the bracket and see how well his team did
+relative to the other teams in the tournament. 
 
 Comment on whether or not this language might be amenable to computer processing (you do not need to choose a language that can be machine-processed).
 
-Yes. Software exists to specify tournaments with any given number of players. 
+Yes. Software exists to specify tournaments. Additionally, an algorithim could be written to 'flatten' a bracket and create a ranked list of how well each team in the bracket did. This could look at both what round the team made
+it to as well as the relative strength of the team that finally eliminated that each team. 

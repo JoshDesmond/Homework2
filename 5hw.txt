@@ -47,13 +47,17 @@ This common convention serves as the syntax for creating visual trees.
 
 The execution statements are specifying matches to be played, and building the tournament tree after games are played.
 
-An example in English is:
+An example in words of a match (with its conditional branches) within a tournament is:
+WPI plays MIT in a best of three in the semi-finals. The winner of the match moves onto the finals. The loser of the match plays in the third place game.
 
-WPI plays MIT in a best of three in the semi-finals. The winner of the match moves onto the finals, playing another best of the three. The loser of the match plays in the third place game.
+And a complicated example of a tournament is the World Cup in soccer:
+Teams are seeded into one of eight group stage brackets, according to the following seeding rules: Each group gets one elite team, (defined as one of the top seven or eight FIFA ranked teams and the host country), and one team from each of the three other geographical groups.
+There is then a round robin stage, where the top two teams from each group advance into the bracket stage, according to the scoring system that a win is three points, a tie is one point, and a loss is zero points.
+The bracket is then completed with best of ones, with ties being handled via two overtimes and a penalty shoot-out. A third place match is played before the World Cup finals.
 
 -- What "data values" do programs in this language evaluate to?
 
-The programs would evaluate to a list of teams by ranking.
+The programs would evaluate to a list of teams by ranking, or a filled out/completed bracket showing the scores/performances of each team.
 
 -- What is the corresponding notion of an interpreter for your language?
 

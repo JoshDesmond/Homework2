@@ -22,9 +22,18 @@
 (define-syntax send
   (syntax-rules ()
     [(send obj message arg)
-     ((obj 'message) arg)]
+     (let ([fun (obj 'message)])
+       ;;if void -> error else val
+       (cond [(void? fun) (error (format "Function undefined:  given ~a" 'message))]
+             [else
+              ((obj 'message) arg)]))]
+     
     [(send obj message) ;; methods without arguments
-     ((obj 'message))]))
+     (let ([fun (obj 'message)])
+       ;;if void -> error else val
+       (cond [(void? fun) (error (format "Function undefined:  given ~a" 'message))]
+             [else
+              ((obj 'message))]))]))
 
 
 ;; Dillo-class, an example class using our notation.

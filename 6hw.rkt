@@ -80,3 +80,37 @@
 (define d2 ((d1 'run-over)))
 ((d2 'longer-than?) 5)
 |#
+
+
+;; ========================================================
+;; ======================== Part Two ======================
+;; ========================================================
+
+;; The macro
+(define-syntax policy-checker
+  (syntax-rules ()
+    [(policy-checker 
+      (title (action ...) (object ...))
+      ...) 
+     (lambda (a-title a-action a-object)
+       (cond [(symbol=? 'title a-title)
+              (and (cons? ;; because member returns a list if the item is a member of the list,
+                          ;; asking cons? will return false if member returned false, and true
+                          ;; if member returned a list.
+                    (member a-action (list 'action ...))) (cons? (member a-object (list 'object ...))))]
+             ...
+             [else (error (format "given title was not found: ~a" a-title))]))]))
+
+;; This is an example of a policy written in our target language
+(define check-policy
+  (policy-checker
+   (programmer (read write) (code documentation))
+   (tester (read) (code))
+   (tester (write) (documentation))
+   (manager (read write) (reports))
+   (manager (read) (documentation))
+   (ceo (read write) (code documentation reports))))
+
+;; These are example calls in our language. 
+(check-policy 'programmer 'write 'code) ;; returns true
+(check-policy 'programmer 'write 'reports) ;; returns false

@@ -27,7 +27,7 @@
        (cond [(void? fun) (error (format "Function undefined:  given ~a" 'message))]
              [else
               ((obj 'message) arg)]))]
-     
+    
     [(send obj message) ;; methods without arguments
      (let ([fun (obj 'message)])
        ;;if void -> error else val
@@ -39,8 +39,8 @@
 ;; Dillo-class, an example class using our notation.
 (define dillo-class
   (class (initvars length dead?)
-         (method longer-than? (len) (> length len))
-         (method run-over () (dillo-class (+ length 1) true))))
+    (method longer-than? (len) (> length len))
+    (method run-over () (dillo-class (+ length 1) true))))
 
 ;; dillo-class is converted into:
 #|
@@ -56,13 +56,13 @@
 ;; Example class without methods
 (define classNoMethod
   (class (initvars length dead?)
-         ))
+    ))
 
 ;; Example class without variables
 (define classNoVars
   (class 
-         (method longer-than? (len) (> length len))
-         (method run-over () (dillo-class (+ length 1) true))))
+      (method longer-than? (len) (> length len))
+    (method run-over () (dillo-class (+ length 1) true))))
 
 
 ;;testing Send
@@ -87,21 +87,7 @@
 ;; ========================================================
 
 ;; The macro
-#|
-(define-syntax policy-checker
-  (syntax-rules ()
-    [(policy-checker 
-      (title (action ...) (object ...))
-      ...) 
-     (lambda (a-title a-action a-object)
-       (cond [(symbol=? 'title a-title)
-              (and (cons? ;; because member returns a list if the item is a member of the list,
-                          ;; asking cons? will return false if member returned false, and true
-                          ;; if member returned a list.
-                    (member a-action (list 'action ...))) (cons? (member a-object (list 'object ...))))]
-             ...
-             [else (error (format "given title was not found: ~a" a-title))]))]))
-|#
+
 (define-syntax policy-checker
   (syntax-rules ()
     [(policy-checker
@@ -111,24 +97,25 @@
             (append (list 'action ...) ...)]
            [loobjects
             (append (list 'object ...) ...)])
-     (lambda (a-title a-action a-object)
-       (if (not (contains? a-action loactions)) ;; check if action is ever defined
-           (error (format "given action was not found: ~a" a-action)))
-       (if (not (contains? a-object loobjects)) ;; check if object is ever defined
-           (error (format "given object was not found: ~a" a-object)))
-       (cond [(symbol=? 'title a-title) ;; filter through
-              (and (contains? a-action (list 'action ...))
-                   (contains? a-object (list 'object ...)))]
-             ... ;; asks a conditional for every title/policy.
-             [else (error (format "given title was not found: ~a" a-title))]
-             )))]))
+       (lambda (a-title a-action a-object)
+         (if (not (contains? a-action loactions)) ;; check if action is ever defined
+             (error (format "given action was not found: ~a" a-action)))
+         (if (not (contains? a-object loobjects)) ;; check if object is ever defined
+             (error (format "given object was not found: ~a" a-object)))
+         (cond [(symbol=? 'title a-title) ;; filter through
+                (and (contains? a-action (list 'action ...))
+                     (contains? a-object (list 'object ...)))]
+               ... ;; asks a conditional for every title/policy.
+               [else (error (format "given title was not found: ~a" a-title))]
+  ;;             [else (error (format "given title was not found: ~a" a-title))]
+               )))]))
 
 ;; contains?: atom list -> boolean
 ;; returns true if the list contains the given item
 (define (contains? item list)
   (cons? (member item list))) ;; because member returns a list if the item is a member of the list,
-                    ;; asking cons? will return false if member returned false, and true
-                    ;; if member returned a list.
+;; asking cons? will return false if member returned false, and true
+;; if member returned a list.
 
 ;; This is an example of a policy written in our target language
 (define check-policy
@@ -146,5 +133,5 @@
 (check-policy 'tester 'read 'code) ;; Returns true
 (check-policy 'manager 'write 'code) ;;returns false
 (check-policy 'progrrmer 'write 'code) ;; returns an error, title not found
-;(check-policy 'programmer 'wrt 'code) ;; returns an error, aciton not found
-;(check-policy 'programmer 'write 'cde) ;; returns an error, object not found
+(check-policy 'programmer 'wrt 'code) ;; returns an error, aciton not found
+(check-policy 'programmer 'write 'cde) ;; returns an error, object not found

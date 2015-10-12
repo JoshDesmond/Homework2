@@ -19,6 +19,8 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 ;; a post is a (make-post string string)
 (define-struct post (author body))
 
+(define POSTS empty)
+
 ;; ===================================================
 ;; ==================== Scripts ======================
 ;; ===================================================
@@ -33,8 +35,14 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 (define-script (mainpage form cookies)
   (values
    (html-page "Main page"
-              "Hello")
+              (getsformatedposts))
    false))
+
+
+;; getsformatedposts: -> racket's html markup of all posts.
+(define (getsformatedposts)
+  (list 'form (list (list 'action "http://localhost:8088/authoring")) (list 'button (list 'type "submit") "Submit")))
+
 
 #| Template script from lab 6 for reference
 (define-script (hotel-main-page form cookies) ;args ignored
@@ -51,10 +59,18 @@ error of using a cookie in the wrong way (follow your hidden field revision).
    false))
 |#
 
+#|
+<form action="demo_form.asp" method="get"><button type="submit">Submit</button><br></form>
+|#
+
 
 ;; ----------------------------------------
 ;; {scriptauthoringpage}
-
+(define-script (authoring form cookies)
+  (values
+   (html-page "Main page"
+              "Hellooo")
+   false))
 ;; ----------------------------------------
 ;; {scriptpreviewpage}
 

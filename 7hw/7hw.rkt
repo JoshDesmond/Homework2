@@ -21,10 +21,13 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 (define-struct post (author body))
 
 ;; POSTS is a list of posts
-(define POSTS empty)
+;(define POSTS empty)
 
 ;; EXAMPLEPOSTS
 (define EXAMPLEPOSTS
+  (list (post "Josh" "this is a post")
+        (post "Saa" "this is <b>another</b> post")))
+(define POSTS
   (list (post "Josh" "this is a post")
         (post "Saa" "this is <b>another</b> post")))
 
@@ -43,7 +46,7 @@ error of using a cookie in the wrong way (follow your hidden field revision).
   (values
    (html-page "Main page"
                 NEWPOSTBUTTON
-                (getsformatedposts))
+                (getsformatedposts POSTS))
    false))
 
 ;; NEWPOSTBUTTON
@@ -52,8 +55,8 @@ error of using a cookie in the wrong way (follow your hidden field revision).
   (list 'form (list (list 'action "http://localhost:8088/authoring")) (list 'button (list 'type "submit") "Submit")))
 
 ;; getsformatedposts: -> racket's html markup of all posts.
-(define (getsformatedposts)
-  (string->xexpr (formatposts EXAMPLEPOSTS)))
+(define (getsformatedposts posts)
+  (string->xexpr (formatposts posts)))
 
 ;; formatposts: list(post) -> string
 ;; creates an html formatted string of the post list
@@ -110,13 +113,61 @@ A preview button (which opens the preview page in a new window/tab---see "_blank
 |#
 (define-script (authoring form cookies)
   (values
-   (html-page "Main page"
-              "Hellooo")
+   (html-page "Authoring Page"
+            (string->xexpr htmlString)  
+              )
    false))
+
+
+(define htmlString "<p><p>MakePost </p> 
+<form action=\"http://localhost:8088/previewpage\">
+<input type=\"text\" name=\"name\" placeholder=\"first\" />
+<input type=\"text\" name=\"body\" placeholder=\"body\"/>
+<input type=\"submit\" value= \"preview\" />
+</form></p>")
+#|
+|#
 ;; ----------------------------------------
 ;; {scriptpreviewpage}
+(define-script (previewpage form cookies)
+  ; cdr takes second item in list. assoc finds pair with first field namein form
+  (let* ([name (cdr (assoc 'name form))]
+         [body (cdr (assoc 'body form))]
+         [tempPosts (cons (post name body)
+                          POSTS)])
+  (values
+   (html-page "preview page"
+                (SubmitPost name body)
+                CancelPost
+                (getsformatedposts tempPosts)
+                ;;hidden name body 
+                )
+   false)))
 
+(define (SubmitPost name body)
+  (list 'form
+        (list
+         (list 'action "http://localhost:8088/submitScript"))
+        (list 'button (list 'type "submit") "submit")
+        (list 'input (list (list 'type "hidden")
+                           (list 'name "tempName")
+                           (list 'value name)))
+        (list 'input (list (list 'type "hidden")
+                           (list 'name "tempBody")
+                           (list 'value body)))))
+(define CancelPost
+  (list 'form (list (list 'action "http://localhost:8088/mainpage")) (list 'button (list 'type "submit") "cancel")));;TODO fix button from submitCancel 
 ;; ----------------------------------------
 ;; {scriptsubmitbutton}
-
+(define-script (submitScript form cookies)
+ (let* ([name (cdr (assoc 'tempName form))]
+         [body (cdr (assoc 'tempBody form))]
+         [tempPosts (cons (post name body)
+                          POSTS)])
+  (values
+   (begin
+     (set! POSTS tempPosts)
+     (invoke "mainpage" empty cookies)
+     )
+   false)))
 (test)

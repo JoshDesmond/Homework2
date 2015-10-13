@@ -2,6 +2,7 @@
 ;; Homework 7
 (require racket/list)
 (load "server.rkt") ;file must be in same folder
+(require test-engine/racket-gui)
 
 #|
 Hint: You will need to define four scripts:
@@ -19,7 +20,13 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 ;; a post is a (make-post string string)
 (define-struct post (author body))
 
+;; POSTS is a list of posts
 (define POSTS empty)
+
+;; EXAMPLEPOSTS
+(define EXAMPLEPOSTS
+  (list (post "Josh" "this is a post")
+        (post "Saa" "this is <b>another</b> post")))
 
 ;; ===================================================
 ;; ==================== Scripts ======================
@@ -46,7 +53,36 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 
 ;; getsformatedposts: -> racket's html markup of all posts.
 (define (getsformatedposts)
-  (list 'b "hello"))
+  (string->xexpr (formatposts EXAMPLEPOSTS)))
+
+;; formatposts: list(post) -> string
+;; creates an html formatted string of the post list
+(define (formatposts posts)
+  (wrapstringp
+   (formatpostshelper "" posts)))
+
+;; formatposthelper: string list(post) -> string
+(define (formatpostshelper current restposts)
+  (cond [(empty? restposts) current]
+        [else (formatpostshelper (string-append current
+                             (wrapstringp (post-author (first restposts)))
+                             (wrapstringp (post-body (first restposts)))
+                             ) (rest restposts))]))
+
+;; TODO delete this:
+;(define MOCKPOSTS
+;  "<p><p>Josh</p><p>this is a post</p><p>Saa</p><p>this is <b>another</b> post</p></p>")
+  ;"<p><p><p>Post 1 Written by Josh</p> Hello this is a post Post 2 written by Saa Hello this is <b>another</b> post</p></p>")
+(check-expect (formatposts EXAMPLEPOSTS) "<p><p>Josh</p><p>this is a post</p><p>Saa</p><p>this is <b>another</b> post</p></p>")
+
+
+;; wrapstringp: string -> string
+;; wraps a string in <p> tags
+(define (wrapstringp str)
+  (string-append "<p>"
+                 str
+                 "</p>"))
+(check-expect (wrapstringp "hello") "<p>hello</p>")
 
 
 #| Template script from lab 6 for reference
@@ -64,13 +100,14 @@ error of using a cookie in the wrong way (follow your hidden field revision).
    false))
 |#
 
-#|
-<form action="demo_form.asp" method="get"><button type="submit">Submit</button><br></form>
-|#
-
 
 ;; ----------------------------------------
 ;; {scriptauthoringpage}
+#|
+A field in which to enter your name
+A field in which to enter the text of the post (which can include regular hmtl markup such as <b> ... </b> for bold face, etc.)
+A preview button (which opens the preview page in a new window/tab---see "_blank" for target attribute in Lab 6 hotel code.)
+|#
 (define-script (authoring form cookies)
   (values
    (html-page "Main page"
@@ -81,3 +118,5 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 
 ;; ----------------------------------------
 ;; {scriptsubmitbutton}
+
+(test)

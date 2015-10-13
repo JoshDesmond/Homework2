@@ -35,13 +35,18 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 (define-script (mainpage form cookies)
   (values
    (html-page "Main page"
-              (getsformatedposts))
+                NEWPOSTBUTTON
+                (getsformatedposts))
    false))
 
+;; NEWPOSTBUTTON
+;; defines the html (in terms of racket lists) of the button to create a new post
+(define NEWPOSTBUTTON
+  (list 'form (list (list 'action "http://localhost:8088/authoring")) (list 'button (list 'type "submit") "Submit")))
 
 ;; getsformatedposts: -> racket's html markup of all posts.
 (define (getsformatedposts)
-  (list 'form (list (list 'action "http://localhost:8088/authoring")) (list 'button (list 'type "submit") "Submit")))
+  (list 'b "hello"))
 
 
 #| Template script from lab 6 for reference

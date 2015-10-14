@@ -4,15 +4,6 @@
 (load "server.rkt") ;file must be in same folder
 (require test-engine/racket-gui)
 
-#|
-Hint: You will need to define four scripts:
-    Three: (one) each to create the main, authoring and preview pages, and
-    one to handle the accept button.
-
-Review the Lab 6 hotel code for examples of how to manipulate HTML, but don't commit the same
-error of using a cookie in the wrong way (follow your hidden field revision).
-|#
-
 ;; ===================================================
 ;; =================== Data Def. =====================
 ;; ===================================================
@@ -24,8 +15,8 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 ;(define POSTS empty)
 
 ;; EXAMPLEPOSTS EXAMPLEPOSTS
-  (define EXAMPLEPOSTS (list (post "Josh" "this is a post")
-        (post "Saa" "this is <b>another</b> post")))
+(define EXAMPLEPOSTS (list (post "Josh" "this is a post")
+                           (post "Saa" "this is <b>another</b> post")))
 (define POSTS
   (list (post "Josh" "this is a post")
         (post "Saa" "this is <b>another</b> post")))
@@ -44,8 +35,8 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 (define-script (mainpage form cookies)
   (values
    (html-page "Main page"
-                NEWPOSTBUTTON
-                (getsformatedposts POSTS))
+              NEWPOSTBUTTON
+              (getsformatedposts POSTS))
    false))
 
 ;; NEWPOSTBUTTON
@@ -67,14 +58,10 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 (define (formatpostshelper current restposts)
   (cond [(empty? restposts) current]
         [else (formatpostshelper (string-append current
-                             (wrapstringp (post-author (first restposts)))
-                             (wrapstringp (post-body (first restposts)))
-                             ) (rest restposts))]))
+                                                (wrapstringp (post-author (first restposts)))
+                                                (wrapstringp (post-body (first restposts)))) 
+                                 (rest restposts))]))
 
-;; TODO delete this:
-;(define MOCKPOSTS
-;  "<p><p>Josh</p><p>this is a post</p><p>Saa</p><p>this is <b>another</b> post</p></p>")
-  ;"<p><p><p>Post 1 Written by Josh</p> Hello this is a post Post 2 written by Saa Hello this is <b>another</b> post</p></p>")
 (check-expect (formatposts EXAMPLEPOSTS) "<p><p>Josh</p><p>this is a post</p><p>Saa</p><p>this is <b>another</b> post</p></p>")
 
 
@@ -87,22 +74,6 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 (check-expect (wrapstringp "hello") "<p>hello</p>")
 
 
-#| Template script from lab 6 for reference
-(define-script (hotel-main-page form cookies) ;args ignored
-  (values 
-   (html-page "Hotel Main Page"
-              "Welcome! Which hotel do you want to view?"
-              (append (list 'form 
-                            (list (list 'action "http://localhost:8088/reserve")
-                                  (list 'target "_blank"))) ;in new window/tab
-                      (format-choices HOTEL-DATA)
-                      (list (list 'input (list (list 'type "text")
-                                               (list 'name "choice"))))))
-   ;; no cookie
-   false))
-|#
-
-
 ;; ----------------------------------------
 ;; {scriptauthoringpage}
 #|
@@ -113,13 +84,13 @@ A preview button (which opens the preview page in a new window/tab---see "_blank
 (define-script (authoring form cookies)
   (values
    (html-page "Authoring Page"
-            (string->xexpr htmlString)  
+              (string->xexpr htmlString)  
               )
    false))
 
 
 (define htmlString "<p><p>MakePost </p> 
-<form action=\"http://localhost:8088/previewpage\">
+<form action=\"http://localhost:8088/previewpage\" target=\"_blank\">
 <input type=\"text\" name=\"name\" placeholder=\"first\" />
 <input type=\"text\" name=\"body\" placeholder=\"body\"/>
 <input type=\"submit\" value= \"preview\" />
@@ -134,14 +105,14 @@ A preview button (which opens the preview page in a new window/tab---see "_blank
          [body (cdr (assoc 'body form))]
          [tempPosts (cons (post name body)
                           POSTS)])
-  (values
-   (html-page "preview page"
+    (values
+     (html-page "preview page"
                 (SubmitPost name body)
                 CancelPost
                 (getsformatedposts tempPosts)
                 ;;hidden name body 
                 )
-   false)))
+     false)))
 
 (define (SubmitPost name body)
   (list 'form
@@ -155,21 +126,21 @@ A preview button (which opens the preview page in a new window/tab---see "_blank
                            (list 'name "tempBody")
                            (list 'value body)))))
 (define CancelPost
-  (list 'form (list (list 'action "http://localhost:8088/mainpage")) (list 'button "Cancel")))
+  (list 'form (list (list 'action "http://localhost:8088/authoring")) (list 'button "Cancel")))
 ;; ----------------------------------------
 ;; {scriptsubmitbutton}
 (define-script (submitScript form cookies)
- (let* ([name (cdr (assoc 'tempName form))]
+  (let* ([name (cdr (assoc 'tempName form))]
          [body (cdr (assoc 'tempBody form))]
          [tempPosts (cons (post name body)
                           POSTS)])
-  (values
+    (values
      (set! POSTS tempPosts)
-
+     
      false)
-   (invoke "mainpage" form cookies)))
+    (invoke "mainpage" form cookies)))
 
-   
+
 
 
 (test)

@@ -24,7 +24,7 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 ;(define POSTS empty)
 
 ;; EXAMPLEPOSTS EXAMPLEPOSTS
-  (list (post "Josh" "this is a post")
+  (define EXAMPLEPOSTS (list (post "Josh" "this is a post")
         (post "Saa" "this is <b>another</b> post")))
 (define POSTS
   (list (post "Josh" "this is a post")

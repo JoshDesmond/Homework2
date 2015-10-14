@@ -23,8 +23,7 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 ;; POSTS is a list of posts
 ;(define POSTS empty)
 
-;; EXAMPLEPOSTS
-(define EXAMPLEPOSTS
+;; EXAMPLEPOSTS EXAMPLEPOSTS
   (list (post "Josh" "this is a post")
         (post "Saa" "this is <b>another</b> post")))
 (define POSTS

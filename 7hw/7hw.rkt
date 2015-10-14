@@ -165,9 +165,7 @@ A preview button (which opens the preview page in a new window/tab---see "_blank
          [tempPosts (cons (post name body)
                           POSTS)])
   (values
-   (begin
      (set! POSTS tempPosts)
-     (invoke "mainpage" empty cookies)
-     )
-   false)))
+     false)
+   (invoke "mainpage" form cookies)))
 (test)

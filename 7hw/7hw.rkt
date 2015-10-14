@@ -51,7 +51,7 @@ error of using a cookie in the wrong way (follow your hidden field revision).
 ;; NEWPOSTBUTTON
 ;; defines the html (in terms of racket lists) of the button to create a new post
 (define NEWPOSTBUTTON
-  (list 'form (list (list 'action "http://localhost:8088/authoring")) (list 'button (list 'type "submit") "Submit")))
+  (list 'form (list (list 'action "http://localhost:8088/authoring")) (list 'button "New Post")))
 
 ;; getsformatedposts: -> racket's html markup of all posts.
 (define (getsformatedposts posts)
@@ -147,7 +147,7 @@ A preview button (which opens the preview page in a new window/tab---see "_blank
   (list 'form
         (list
          (list 'action "http://localhost:8088/submitScript"))
-        (list 'button (list 'type "submit") "submit")
+        (list 'button "Submit")
         (list 'input (list (list 'type "hidden")
                            (list 'name "tempName")
                            (list 'value name)))
@@ -155,7 +155,7 @@ A preview button (which opens the preview page in a new window/tab---see "_blank
                            (list 'name "tempBody")
                            (list 'value body)))))
 (define CancelPost
-  (list 'form (list (list 'action "http://localhost:8088/mainpage")) (list 'button (list 'type "submit") "cancel")));;TODO fix button from submitCancel 
+  (list 'form (list (list 'action "http://localhost:8088/mainpage")) (list 'button "Cancel")))
 ;; ----------------------------------------
 ;; {scriptsubmitbutton}
 (define-script (submitScript form cookies)
@@ -165,6 +165,11 @@ A preview button (which opens the preview page in a new window/tab---see "_blank
                           POSTS)])
   (values
      (set! POSTS tempPosts)
+
      false)
    (invoke "mainpage" form cookies)))
+
+   
+
+
 (test)
